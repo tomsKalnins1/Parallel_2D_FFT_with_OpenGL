@@ -168,6 +168,7 @@
     <ClInclude Include="VBO.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="frag.fs" />
     <None Include="fragFrameBuffer.fs" />
     <None Include="fragMesh.fs" />

@@ -36,9 +36,12 @@ public:
 
 	vector<complex<float>> fft_1D(vector<complex<float>> signal);
 
+
 	vector<vector<complex<float>>> fft_2D(vector<vector<complex<float>>> signalR);
 
 	static void printMaxMag(vector<vector<complex<float>>> fft_2D_output);
+
+	static void printMaxMag(vector<complex<float>> fft_2D_output);
 
 
 };

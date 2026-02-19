@@ -310,7 +310,7 @@ int main() {
 
 		if (save) {
 		
-			//saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\frequence_16_4_2d_FFT_test.png");
+		//	saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\frequence_16_4_2d_FFT_test_256.png");
 			//save = false;
 		}
 
@@ -367,7 +367,7 @@ int main() {
 	
 	cout << "SIZE OF IMAGE INPUT ROW = " << fftInputRow.size() << '\n';
 	unsigned char* image_fft;
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\frequence_4_2_2d_FFT_test.png";
+	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\frequence_3_3_8pix_flip.png";
 	int fftHeight, fftWidth, fftNumChannels;
 	image_fft = stbi_load(pathToImage.c_str(), &fftWidth, &fftHeight, &fftNumChannels, 0);
 	cout << "NUM COLOR CHANNELS  =  " << fftNumChannels << " WIDTH = " << fftWidth << " HEIGHT = " << fftHeight << '\n';
@@ -380,13 +380,13 @@ int main() {
 	int y1 = 0;
 
 
-
+	int sizeImg = fftHeight;
 	
-	for (int y = 0; y < 32; y++) {
+	for (int y = 0; y < sizeImg; y++) {
 	
 		vector<complex<float>> one_row;
 
-		for (int x = 0; x < 32; x ++) {
+		for (int x = 0; x < sizeImg; x ++) {
 		
 			complex<float> c_img((float)image_fft[y1], 0.0f);
 			
@@ -399,6 +399,30 @@ int main() {
 		imageData_rows.push_back(one_row);
 
 	}
+
+	vector<complex<float>> row_test = imageData_rows[0];
+
+	row_test = fft.fft_1D(row_test);
+
+	cout << "SIZE ->AFTER FFT ON ROW DATA = " << row_test.size() << '\n';
+
+	fft2D::printMaxMag(row_test);
+
+
+	for (int ro = 0; ro < imageData_rows.size(); ro++) {
+		
+		row_test[ro] = imageData_rows[ro][3];
+	//	row_test.push_back(imageData_rows[ro][16]);
+		
+			
+	}
+	cout << "SIZE ->AFTER GATHERING COLUMN DATA = " << row_test.size() << '\n';
+
+	row_test = fft.fft_1D(row_test);
+
+	cout << "SIZE ->AFTER FFT ON COLUMN DATA = " << row_test.size() << '\n';
+
+	fft2D::printMaxMag(row_test);
 /*
 	for (int x = 0; x < 1024; x++) {
 
@@ -454,6 +478,8 @@ int main() {
 
 	cout << " FREQUENCY SPECTRUM PEAK = " << maxMag/512.0f + 128.0f << "  AT FREQ.  = " << maxInt << '\n';
 	*/
+
+
 
 	glfwDestroyWindow(window);
 
