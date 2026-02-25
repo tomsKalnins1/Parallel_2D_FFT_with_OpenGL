@@ -78,7 +78,7 @@ vector<vector<complex<float>>> fft2D::fft_2D(vector<vector<complex<float>>> sign
 	for (int y = 0; y < size; y++) {
 	//	cout << "beefore fft2d" << endl;
 		vector<complex<float>> one_row = fft_1D(signalRow[y]);
-		cout << "ROW nr. " << y << endl;
+//		cout << "ROW nr. " << y << endl;
 		printMaxMag(one_row);
 
 		image_rows_fft[y] = one_row;
@@ -86,7 +86,7 @@ vector<vector<complex<float>>> fft2D::fft_2D(vector<vector<complex<float>>> sign
 
 		r++;
 	}
-	vector<vector<complex<float>>> image_cols_fft(8);
+	vector<vector<complex<float>>> image_cols_fft(size);
 	cout << "FFT FOR ROW : " << r << " COMPLETED " << endl;
 
 	int x1 = 0;
@@ -149,7 +149,7 @@ void fft2D::printMaxMag(vector<vector<complex<float>>> fft_2D_output) {
 			float im = fft_2D_output[x][y].imag();
 		//	row_1 += "( " + std::to_string((int) re) + ",  " + std::to_string((int) im) + " ), ";
 			mag = sqrt(pow(re, 2.0f) + pow(im, 2.0f));
-			cout << "MAG of row/FREQ X  = " << x << " ,  colFREQ Y =  " << y << "  =  " << mag/(size * size) << endl;
+		//	cout << "MAG of row/FREQ X  = " << x << " ,  colFREQ Y =  " << y << "  =  " << mag/(size * size) << endl;
  
 			
 
@@ -192,7 +192,7 @@ void fft2D::printMaxMag(vector<complex<float>> fft_2D_output) {
 
 		mag = sqrt(pow(im, 2.0f) + pow(re, 2.0f));
 
-		cout << "MAG of freq nr. " << i << "  =  " << mag/(size/2) << endl;
+	//	cout << "MAG of freq nr. " << i << "  =  " << mag/(size/2) << endl;
 
 
 
@@ -205,5 +205,5 @@ void fft2D::printMaxMag(vector<complex<float>> fft_2D_output) {
 		}
 	}
 
-	cout << "LARGEST MAGNITUDE  = " << maxMag << " FOR THE FREQ.  : " << freq <<  "  AND PHASE (deg) " << (phase * 180.0f/M_PI) << " SIZE OF FFT OUTPUT = " << fft_2D_output.size() << endl;
+	//cout << "LARGEST MAGNITUDE  = " << maxMag << " FOR THE FREQ.  : " << freq <<  "  AND PHASE (deg) " << (phase * 180.0f/M_PI) << " SIZE OF FFT OUTPUT = " << fft_2D_output.size() << endl;
 }

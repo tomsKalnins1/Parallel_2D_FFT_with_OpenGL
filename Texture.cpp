@@ -20,7 +20,7 @@ Texture::Texture(string fileName, bool useFrameBuffer) {
 		glGenFramebuffers(1, &fboID);
 		glBindFramebuffer(GL_FRAMEBUFFER, fboID);//!mistake forgot to put fboID instead of ID (black object)
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 
 	
@@ -30,7 +30,7 @@ Texture::Texture(string fileName, bool useFrameBuffer) {
 		unsigned int RBO;
 		glGenRenderbuffers(1, &RBO);
 		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 1024);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 256, 256);
 	//	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);

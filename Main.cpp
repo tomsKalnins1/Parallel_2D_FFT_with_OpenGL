@@ -11,6 +11,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <vector>
 #include <cmath>
+#include <math.h>
 
 #include <string>
 #include <fstream>
@@ -31,7 +32,7 @@ extern int extr;
 
 extern string getFileContent(const char* path);
 
-vector<complex<float>> fftOutput(1024);
+vector<complex<float>> fftOutput(256);
 
 float deltaTime = 0.0f;
 float lastTime = 0.0f;
@@ -55,16 +56,16 @@ bool mouseFirstMove = true; //the first move of mouse resuls in too large offset
 void saveImg(string path) {
 
 	GLsizei nrChannels = 3;
-	GLsizei stride = nrChannels * 1024;
+	GLsizei stride = nrChannels * 256;
 	stride += (stride % 4) ? (4 - stride % 4) : 0; //make sure the stride is a multiple of 4
-	GLsizei bufferSize = stride * 1024;
+	GLsizei bufferSize = stride * 256;
 	vector<char> buffer(bufferSize);
 	glPixelStorei(GL_PACK_ALIGNMENT, 4);
 	glReadBuffer(GL_FRONT);
-	glReadPixels(0, 0, 1024, 1024, GL_RGB, GL_UNSIGNED_BYTE, buffer.data());
+	glReadPixels(0, 0, 256, 256, GL_RGB, GL_UNSIGNED_BYTE, buffer.data());
 //	cout << "SIZE OF THE IMAGE VECTOR (FOR SAVED IMAGE) = " << buffer.size() << '\n';
 	stbi_flip_vertically_on_write(true);
-	stbi_write_png(path.c_str(), 1024, 1024, 3, buffer.data(), stride);
+	stbi_write_png(path.c_str(), 256, 256, 3, buffer.data(), stride);
 
 }
 
@@ -163,7 +164,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(1024, 1024, "Framebuffer", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(256, 256, "Framebuffer", NULL, NULL);
 
 	if (window == NULL) {
 
@@ -194,8 +195,15 @@ int main() {
 
 	string v = "vert.vs";
 	string f = "frag.fs";
+	
+	string frame_b_vert = "vertFrameBuffer.vs";
+	string frabe_b_frag = "fragFrameBuffer.fs";
+	
+	glViewport(0, 0, 256, 256);
 
 	Shader sh(v.c_str(), f.c_str());
+
+	Shader shF(frame_b_vert.c_str(), frabe_b_frag.c_str());
 
 	VAO vao;
 
@@ -210,18 +218,11 @@ int main() {
 
 	Texture tex("image.png", false);
 
-	glm::mat4 rot = glm::mat4(1.0f);
 
-	rot = glm::rotate(rot, (float) glm::radians(0.0), glm::vec3(0.0f, 0.0f, 1.0f));
 
-	Shader::setUniform(sh.ID, "rotate", rot);
-	Shader::setUniform(sh.ID, "signal.frequency",  static_cast<unsigned int>(4));
-	Shader::setUniform(sh.ID, "signal.amplitude", 0.5f);
+	
 
-	string fBufferVert = "vertFrameBuffer.vs";
-	string fBufferFrag = "fragFrameBuffer.fs";
 
-	Shader shF(fBufferVert.c_str(), fBufferFrag.c_str());
 
 	VAO vaoF;
 	vaoF.Bind();
@@ -236,16 +237,10 @@ int main() {
 
 
 
-	GLubyte ren[1024*4];
-
-	Texture f4("frequence_4.png", false);
-	Texture f5("frequence_5.png", false);
-	Texture f1("frequence_1.png", false);
-
 
 	
 
-	
+	/*
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -266,7 +261,7 @@ int main() {
 		vao.Bind();
 
 	//	tex.Bind();
-	/*	glActiveTexture(GL_TEXTURE4);
+		glActiveTexture(GL_TEXTURE4);
 		f4.Bind();
 		Shader::setUniform(sh.ID, "freq4",(unsigned int) 4);
 
@@ -277,7 +272,7 @@ int main() {
 		glActiveTexture(GL_TEXTURE1);
 		f1.Bind();
 		Shader::setUniform(sh.ID, "freq1", (unsigned int)1);
-	*/
+	
 
 
 
@@ -297,15 +292,6 @@ int main() {
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-
-		/*The freambuffer that is bound at the start of the loop is the one that contains a texture attachment that can be sampled and
-		changed with shaders, while also it has render buffer object attached which has also the image to be rendered and all the 
-		pixel values, but in a native opengl format and data from it cannot be read from directly.It having this native format makes
-		the swappign of buffers faster and helps with optimization. 
-		The texture that has an empty array has the scene rendered to it which is then used as texture to render on
-		a plane for postprocessing, which is another attachment to the custom frame buffer before the buffers are swapped
-		nd just after the scene is is drawn the glReadPixels is called and it read the screen output
-		data as image form the*/
 
 
 		if (save) {
@@ -328,46 +314,25 @@ int main() {
 		vaoF.Bind();
 
 		texF.Bind();
-		glActiveTexture(GL_TEXTURE10);
-		Shader::setUniform(shF.ID, "filterTexture", (unsigned int) 10);
+		glActiveTexture(GL_TEXTURE9);
+		Shader::setUniform(shF.ID, "filterTexture", (unsigned int) 9);
 
 
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
-		/*If one thing fails anything, here it was linking due to mismathch of one letter for vertex shader otuput and
-		frag shader input -> the program did not link -> it could not be activated -> the framebuffer content
-		was rendered to a texture which could then be drawn onto the plane(screen), but the previosu shader program was still running
-		which means that the matrix transformations applied to the cube got applied to the plane*/
-	//!	shF.Use();
-
-	//!	vaoF.Bind();
-		//	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-		//	glClear(GL_COLOR_BUFFER_BIT);
-		//	glUniform1i(glGetUniformLocation(shF.ID, "filterTexture"), 0);
-
-
-
-	//!	texF.Bind();
-
-
-
-		//	glUseProgram(0);
-		//	glUseProgram(shFID);
-		//!	glDrawArrays(GL_TRIANGLES, 0, 6);
 	
 
 		glfwSwapBuffers(window);
 		
-	}
+	}*/
 	fft2D fft(64.0f, 64.0f);
 	
 	vector<complex<float>> fftInputRow;
 	
 	cout << "SIZE OF IMAGE INPUT ROW = " << fftInputRow.size() << '\n';
 	unsigned char* image_fft;
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\frequence_3_3_8pix_flip.png";
+	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\rectangle_test_fft_256.png";
 	int fftHeight, fftWidth, fftNumChannels;
 	image_fft = stbi_load(pathToImage.c_str(), &fftWidth, &fftHeight, &fftNumChannels, 0);
 	cout << "NUM COLOR CHANNELS  =  " << fftNumChannels << " WIDTH = " << fftWidth << " HEIGHT = " << fftHeight << '\n';
@@ -388,7 +353,7 @@ int main() {
 
 		for (int x = 0; x < sizeImg; x ++) {
 		
-			complex<float> c_img((float)image_fft[y1], 0.0f);
+			complex<float> c_img((float)image_fft[y1]/255.0f, 0.0f);
 			
 			y1 += 3;
 			
@@ -423,25 +388,7 @@ int main() {
 	cout << "SIZE ->AFTER FFT ON COLUMN DATA = " << row_test.size() << '\n';
 
 	fft2D::printMaxMag(row_test);
-/*
-	for (int x = 0; x < 1024; x++) {
 
-		vector<complex<float>> one_col;
-
-		for (int y = 0; y < 1024; y++) {
-
-			complex<float> c_img((float)image_fft[y * 3072 + x1], 0.0f);
-
-			
-
-			one_col.push_back(c_img);
-
-		}
-		x1 += 3;
-		imageData_cols.push_back(one_col);
-
-	}
-	*/
 	int n = 0;
 	//cout << "sizeof output = " <<  << '\n';
 
@@ -451,34 +398,444 @@ int main() {
 
 	fft2D::printMaxMag(image_2D_freq_sprectrum);
 
+
+	glm::vec2 freq_re_im[169];
+
+	glm::vec2 freq_re_im_1[169];
+
+	glm::vec2 freq_re_im_2[169];
+
+	glm::vec2 freq_re_im_3[169];
+
+	glm::vec2 freq_re_im_4[169];
+
+	glm::vec2 freq_re_im_5[169];
+
+	glm::vec2 freq_re_im_6[169];
+
+	glm::vec2 freq_re_im_7[169];
+
+
+	int wave_count = 0;
+	int wave_count_ph_mag = 0;
 	/*
 
-	fftOutput = fft.fft_1D(fftInputRow);
+	float* fft_fr_x_y_re_im_data = new float[50 * 50 * 4];
+	float* fft_phase_mag_data = new float[50 * 50 * 2];
 
+	string debug_tex = "";
 
-	float mag = 0;
+	for (int x = 0; x < 50; x++) {
 
-	float maxMag = 0;
-	int maxInt = 0;
-	for (int k = 0; k < 1024; k++) {
+		string one_line = "";
 		
-		//cout << fftOutput[k].real() << " + " << fftOutput[k].imag() << " * (i)" << '\n';
-		mag = sqrt(pow(fftOutput[k].imag(), 2.0f) + pow(fftOutput[k].real(), 2.0f));
-		//cout << "magnitude of " << k << " 'th  frequency = " << mag / 256.0f << '\n';
+		for (int y = 0; y < 50; y++) {
+		
+	//		fft_fr_x_y_re_im[wave_count + y]
 
-		if (mag > maxMag && k != 0) {
-			maxMag = mag;
-			maxInt = k;
+			fft_fr_x_y_re_im_data[wave_count] = ((float) x) / (256.0f * 256.0f);
+
+			fft_fr_x_y_re_im_data[wave_count + 1] = ((float) y)/(256.0f * 256.0f);
+
+			fft_fr_x_y_re_im_data[wave_count + 2] = image_2D_freq_sprectrum[x][y].real() / (256.0f * 256.0f);
+
+			fft_fr_x_y_re_im_data[wave_count + 3] = image_2D_freq_sprectrum[x][y].imag()/ (256.0f * 256.0f);
+
+			fft_phase_mag_data[wave_count_ph_mag] = atan(image_2D_freq_sprectrum[x][y].imag() / image_2D_freq_sprectrum[x][y].real())/(2 * M_PI)/M_PI;
+
+			fft_phase_mag_data[wave_count_ph_mag + 1] = sqrt(pow(image_2D_freq_sprectrum[x][y].imag(), 2.0f) + pow(image_2D_freq_sprectrum[x][y].real(), 2.0f)) / (256.0f * 256.0f);
+			
+		//	one_line += "FREQ X = " + fft_fr_x_y_re_im_data[wave_count] + " FREQ Y = " + fft_fr_x_y_re_im_data[wave_count + 1] + "\n";
+
+
+			wave_count_ph_mag += 2;
+			wave_count+=4;
+		}
+
+	//	debug_tex += one_line;
+
+	}
+	
+	//cout << debug_tex << '\n';
+
+	
+	unsigned int tex_fr_x_y_re_im, tex_phase_mag;
+
+
+	//---------------- X FREQ, Y FREQ, REAL, IMAGINARY VALUES TEXTURE
+	
+	glGenTextures(1, &tex_fr_x_y_re_im);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glBindTexture(GL_TEXTURE_2D, tex_fr_x_y_re_im);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 50, 50, 0, GL_RGBA, GL_FLOAT, fft_fr_x_y_re_im_data);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glGenerateMipmap(GL_TEXTURE_2D);
+	
+	//---------------- PHASE, MAGNITUDE VALUES TEXTURE
+
+	glGenTextures(1, &tex_phase_mag);
+
+
+	glBindTexture(GL_TEXTURE_2D, tex_phase_mag);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 3);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, 50, 50, 0, GL_RG, GL_FLOAT, fft_phase_mag_data);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glGenerateMipmap(GL_TEXTURE_2D);
+
+	*/
+
+
+	
+	
+
+	for (int x = 0; x < 13; x++) {
+	
+		for (int y = 0; y < 13; y++) {
+		
+		//	freq_re_im[wave_count].x = (float) x;
+		//	freq_re_im[wave_count].y = (float) y;
+	
+		//	mag[wave_count] = sqrt(pow(image_2D_freq_sprectrum[x][y].real(), 2.0f) + pow(image_2D_freq_sprectrum[x][y].imag(), 2.0f));
+
+		//	phase[wave_count] = atan2(image_2D_freq_sprectrum[x][y].imag() , image_2D_freq_sprectrum[x][y].real());
+
+			freq_re_im[wave_count].x = image_2D_freq_sprectrum[x][y].real();
+
+			freq_re_im[wave_count].y = image_2D_freq_sprectrum[x][y].imag();
+
+		//	cout << "MAG = " << mag[wave_count] << '\n' << "PHASE = " << phase[wave_count] << "\n FRQ_X = " << freq_X[wave_count] << "\n FRQ_Y = " << freq_Y[wave_count] << '\n';
+
+			wave_count++;
+
 		
 		}
 
+	}
+
+	wave_count = 0;
+
+	for (int x = 13; x < 26; x++) {
+
+		for (int y = 13; y < 26; y++) {
+
+		//	freq_re_im_1[wave_count].x = (float)x;
+		//	freq_re_im_1[wave_count].y = (float)y;
+
+		//	mag_1[wave_count] = sqrt(pow(image_2D_freq_sprectrum[x][y].real(), 2.0f) + pow(image_2D_freq_sprectrum[x][y].imag(), 2.0f));
+
+		//	phase_1[wave_count] = atan2(image_2D_freq_sprectrum[x][y].imag() , image_2D_freq_sprectrum[x][y].real());
+
+			freq_re_im_1[wave_count].x = image_2D_freq_sprectrum[x][y].real();
+
+			freq_re_im_1[wave_count].y = image_2D_freq_sprectrum[x][y].imag();
+
+		//	cout << "MAG = " << mag[wave_count] << '\n' << "PHASE = " << phase_1[wave_count] << "\n FRQ_X = " << freq_re_im_1[wave_count].x << "\n FRQ_Y = " << freq_re_im_1[wave_count].y << '\n';
+
+			wave_count++;
+
+
+		}
 
 	}
-	//cout << "sizeof output = " << sizeof(fftOutput) << '\n';
 
-	cout << " FREQUENCY SPECTRUM PEAK = " << maxMag/512.0f + 128.0f << "  AT FREQ.  = " << maxInt << '\n';
-	*/
 
+	wave_count = 0;
+
+	for (int x = 26; x < 39; x++) {
+
+		for (int y = 26; y < 39; y++) {
+
+		//	freq_re_im_2[wave_count].x = (float)x;
+		//	freq_re_im_2[wave_count].y = (float)y;
+
+		//	mag_2[wave_count] = sqrt(pow(image_2D_freq_sprectrum[x][y].real(), 2.0f) + pow(image_2D_freq_sprectrum[x][y].imag(), 2.0f));
+
+//			phase_2[wave_count] = atan2(image_2D_freq_sprectrum[x][y].imag() , image_2D_freq_sprectrum[x][y].real());
+
+			freq_re_im_2[wave_count].x = image_2D_freq_sprectrum[x][y].real();
+
+			freq_re_im_2[wave_count].y = image_2D_freq_sprectrum[x][y].imag();
+
+			//cout << "MAG = " << mag[wave_count] << '\n' << "PHASE = " << phase[wave_count] << "\n FRQ_X = " << freq_X[wave_count] << "\n FRQ_Y = " << freq_Y[wave_count] << '\n';
+
+			wave_count++;
+
+
+		}
+
+	}
+
+	wave_count = 0;
+
+	for (int x = 243; x < 256; x++) {
+
+		for (int y = 0; y < 13; y++) {
+
+			//	freq_re_im_2[wave_count].x = (float)x;
+			//	freq_re_im_2[wave_count].y = (float)y;
+
+			//	mag_2[wave_count] = sqrt(pow(image_2D_freq_sprectrum[x][y].real(), 2.0f) + pow(image_2D_freq_sprectrum[x][y].imag(), 2.0f));
+
+	//			phase_2[wave_count] = atan2(image_2D_freq_sprectrum[x][y].imag() , image_2D_freq_sprectrum[x][y].real());
+
+			freq_re_im_3[wave_count].x = image_2D_freq_sprectrum[x][y].real();
+
+			freq_re_im_3[wave_count].y = image_2D_freq_sprectrum[x][y].imag();
+
+			//cout << "MAG = " << mag[wave_count] << '\n' << "PHASE = " << phase[wave_count] << "\n FRQ_X = " << freq_X[wave_count] << "\n FRQ_Y = " << freq_Y[wave_count] << '\n';
+
+			wave_count++;
+
+
+		}
+
+	}
+
+	wave_count = 0;
+
+	for (int x = 0; x < 13; x++) {
+
+		for (int y = 243; y < 256; y++) {
+
+			//	freq_re_im_2[wave_count].x = (float)x;
+			//	freq_re_im_2[wave_count].y = (float)y;
+
+			//	mag_2[wave_count] = sqrt(pow(image_2D_freq_sprectrum[x][y].real(), 2.0f) + pow(image_2D_freq_sprectrum[x][y].imag(), 2.0f));
+
+	//			phase_2[wave_count] = atan2(image_2D_freq_sprectrum[x][y].imag() , image_2D_freq_sprectrum[x][y].real());
+
+			freq_re_im_4[wave_count].x = image_2D_freq_sprectrum[x][y].real();
+
+			freq_re_im_4[wave_count].y = image_2D_freq_sprectrum[x][y].imag();
+
+			//cout << "MAG = " << mag[wave_count] << '\n' << "PHASE = " << phase[wave_count] << "\n FRQ_X = " << freq_X[wave_count] << "\n FRQ_Y = " << freq_Y[wave_count] << '\n';
+
+			wave_count++;
+
+
+		}
+
+	}
+
+	wave_count = 0;
+
+	for (int x = 243; x < 256; x++) {
+
+		for (int y = 243; y < 256; y++) {
+
+			//	freq_re_im_2[wave_count].x = (float)x;
+			//	freq_re_im_2[wave_count].y = (float)y;
+
+			//	mag_2[wave_count] = sqrt(pow(image_2D_freq_sprectrum[x][y].real(), 2.0f) + pow(image_2D_freq_sprectrum[x][y].imag(), 2.0f));
+
+	//			phase_2[wave_count] = atan2(image_2D_freq_sprectrum[x][y].imag() , image_2D_freq_sprectrum[x][y].real());
+
+			freq_re_im_5[wave_count].x = image_2D_freq_sprectrum[x][y].real();
+
+			freq_re_im_5[wave_count].y = image_2D_freq_sprectrum[x][y].imag();
+
+			//cout << "MAG = " << mag[wave_count] << '\n' << "PHASE = " << phase[wave_count] << "\n FRQ_X = " << freq_X[wave_count] << "\n FRQ_Y = " << freq_Y[wave_count] << '\n';
+
+			wave_count++;
+
+
+		}
+
+	}
+
+	wave_count = 0;
+
+	for (int x = 78; x < 91; x++) {
+
+		for (int y = 78; y < 91; y++) {
+
+			//	freq_re_im_2[wave_count].x = (float)x;
+			//	freq_re_im_2[wave_count].y = (float)y;
+
+			//	mag_2[wave_count] = sqrt(pow(image_2D_freq_sprectrum[x][y].real(), 2.0f) + pow(image_2D_freq_sprectrum[x][y].imag(), 2.0f));
+
+	//			phase_2[wave_count] = atan2(image_2D_freq_sprectrum[x][y].imag() , image_2D_freq_sprectrum[x][y].real());
+
+			freq_re_im_6[wave_count].x = image_2D_freq_sprectrum[x][y].real();
+
+			freq_re_im_6[wave_count].y = image_2D_freq_sprectrum[x][y].imag();
+
+			//cout << "MAG = " << mag[wave_count] << '\n' << "PHASE = " << phase[wave_count] << "\n FRQ_X = " << freq_X[wave_count] << "\n FRQ_Y = " << freq_Y[wave_count] << '\n';
+
+			wave_count++;
+
+
+		}
+
+	}
+
+
+	wave_count = 0;
+
+	for (int x = 91; x < 104; x++) {
+
+		for (int y = 91; y < 104; y++) {
+
+			//	freq_re_im_2[wave_count].x = (float)x;
+			//	freq_re_im_2[wave_count].y = (float)y;
+
+			//	mag_2[wave_count] = sqrt(pow(image_2D_freq_sprectrum[x][y].real(), 2.0f) + pow(image_2D_freq_sprectrum[x][y].imag(), 2.0f));
+
+	//			phase_2[wave_count] = atan2(image_2D_freq_sprectrum[x][y].imag() , image_2D_freq_sprectrum[x][y].real());
+
+			freq_re_im_7[wave_count].x = image_2D_freq_sprectrum[x][y].real();
+
+			freq_re_im_7[wave_count].y = image_2D_freq_sprectrum[x][y].imag();
+
+			//cout << "MAG = " << mag[wave_count] << '\n' << "PHASE = " << phase[wave_count] << "\n FRQ_X = " << freq_X[wave_count] << "\n FRQ_Y = " << freq_Y[wave_count] << '\n';
+
+			wave_count++;
+
+
+		}
+
+	}
+	//cout << "SIZE OF ARRAYS = " << sizeof(phase) << '\n';
+
+	sh.Use();
+
+	unsigned int loc_phase, loc_mag, loc_freq_re_im_vec;
+/*
+	loc_phase = glGetUniformLocation(sh.ID, "phase");
+	glUniform1fv(loc_phase, 169, &phase[0]);
+
+	loc_mag = glGetUniformLocation(sh.ID, "mag");
+	glUniform1fv(loc_mag, 169, &mag[0]);
+*/
+	loc_freq_re_im_vec = glGetUniformLocation(sh.ID, "freq_re_im");
+	glUniform2fv(loc_freq_re_im_vec, 169, glm::value_ptr(freq_re_im[0]));
+
+	
+
+
+
+	//--------------
+
+	unsigned int loc_phase_1, loc_mag_1, loc_freq_re_im_vec_1;
+/*
+	loc_phase_1 = glGetUniformLocation(sh.ID, "phase_1");
+	glUniform1fv(loc_phase_1, 169, &phase_1[0]);
+
+	loc_mag_1 = glGetUniformLocation(sh.ID, "mag_1");
+	glUniform1fv(loc_mag_1, 169, &mag_1[0]);
+*/
+	loc_freq_re_im_vec_1 = glGetUniformLocation(sh.ID, "freq_re_im_1");
+	glUniform2fv(loc_freq_re_im_vec_1, 169, glm::value_ptr(freq_re_im_1[0]));
+
+	//--------------
+
+	unsigned int loc_phase_2, loc_mag_2, loc_freq_re_im_vec_2;
+/*
+	loc_phase_2 = glGetUniformLocation(sh.ID, "phase_2");
+	glUniform1fv(loc_phase_2, 169, &phase_2[0]);
+
+	loc_mag_2 = glGetUniformLocation(sh.ID, "mag_2");
+	glUniform1fv(loc_mag_2, 169, &mag_2[0]);
+*/
+	loc_freq_re_im_vec_2 = glGetUniformLocation(sh.ID, "freq_re_im_2");
+	glUniform2fv(loc_freq_re_im_vec_2, 169, glm::value_ptr(freq_re_im_2[0]));
+
+	unsigned int loc_freq_re_im_vec_3;
+
+	loc_freq_re_im_vec_3 = glGetUniformLocation(sh.ID, "freq_re_im_3");
+	glUniform2fv(loc_freq_re_im_vec_3, 169, glm::value_ptr(freq_re_im_3[0]));
+
+	unsigned int loc_freq_re_im_vec_4;
+
+	loc_freq_re_im_vec_4 = glGetUniformLocation(sh.ID, "freq_re_im_4");
+	glUniform2fv(loc_freq_re_im_vec_4, 169, glm::value_ptr(freq_re_im_4[0]));
+
+	unsigned int loc_freq_re_im_vec_5;
+
+	loc_freq_re_im_vec_5 = glGetUniformLocation(sh.ID, "freq_re_im_5");
+	glUniform2fv(loc_freq_re_im_vec_5, 169, glm::value_ptr(freq_re_im_5[0]));
+
+	unsigned int loc_freq_re_im_vec_6;
+
+	loc_freq_re_im_vec_6 = glGetUniformLocation(sh.ID, "freq_re_im_6");
+//	glUniform2fv(loc_freq_re_im_vec_6, 169, glm::value_ptr(freq_re_im_6[0]));
+
+
+	unsigned int loc_freq_re_im_vec_7;
+
+	loc_freq_re_im_vec_7 = glGetUniformLocation(sh.ID, "freq_re_im_7");
+//	glUniform2fv(loc_freq_re_im_vec_7, 169, glm::value_ptr(freq_re_im_7[0]));
+
+	
+	
+
+	while (!glfwWindowShouldClose(window)) {
+
+		glfwPollEvents();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, texF.fboID);
+
+
+		glDisable(GL_DEPTH_TEST);
+		glClearColor(0.9f, 0.4f, 0.2f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		sh.Use();
+
+		vao.Bind();
+		/*
+
+		glBindTexture(GL_TEXTURE_2D, tex_fr_x_y_re_im);
+		glActiveTexture(GL_TEXTURE10);
+		int loc_fr_complex = glGetUniformLocation(sh.ID, "frq_x_y_re_im");
+		glUniform1i(loc_fr_complex, 10);
+
+		glBindTexture(GL_TEXTURE_2D, tex_phase_mag);
+		glActiveTexture(GL_TEXTURE11);
+		int loc_phase = glGetUniformLocation(sh.ID, "frq_phase_mag");
+		glUniform1i(loc_phase, 11);
+		*/
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	
+
+
+		if (save) {
+
+				saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\INVERSE_rect_orig_13.png");
+				//save = false;
+		}
+
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+		glClearColor(0.9f, 0.4f, 0.2f, 1.0f);
+
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		shF.Use();
+
+		vaoF.Bind();
+
+		texF.Bind();
+		glActiveTexture(GL_TEXTURE9);
+		Shader::setUniform(shF.ID, "filterTexture", (unsigned int)9);
+
+
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+		glfwSwapBuffers(window);
+
+	}
 
 
 	glfwDestroyWindow(window);

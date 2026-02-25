@@ -35,8 +35,8 @@ Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 	string vertexShader	= getFileContent(pathToVert);
 	string fragmentShader = getFileContent(pathToFrag);
 
-//	cout << pathToVert << "\n" << vertexShader << endl;
-//	cout << pathToFrag << "\n" << fragmentShader << endl;
+	//cout << pathToVert << "\n" << vertexShader << endl;
+	//cout << pathToFrag << "\n" << fragmentShader << endl;
 
 	const char* vertexShaderSource = vertexShader.c_str();
 	const char* fragmentShaderSource = fragmentShader.c_str();
