@@ -18,7 +18,7 @@ void VAO::linkVBO(VBO vbo, int numCoords, int numTexCoords) {
 
 	if (numCoords == 2) {
 	
-		if (numTexCoords == 2)
+		if (numTexCoords == 2) {
 
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
@@ -28,10 +28,11 @@ void VAO::linkVBO(VBO vbo, int numCoords, int numTexCoords) {
 			//accidentally typing 2 instead of 1 in the first arg cause access vialition for glDrawArrays
 
 			for (int i = 0; i < 6; ++i) {
-			
-				cout << "vbo coor = " << vbo.vert[i] << endl;
+
+				//	cout << "vbo coor = " << vbo.vert[i] << endl;
 
 			}
+		}
 	}
 
 	if (numCoords == 3) {
