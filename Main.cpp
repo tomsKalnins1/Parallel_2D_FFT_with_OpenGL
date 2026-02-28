@@ -216,7 +216,7 @@ int main() {
 	vao.Unbind();
 	vbo.Unbind();
 
-	Texture tex("image.png", false);
+//	Texture tex("image.png", false);
 
 
 
@@ -228,7 +228,7 @@ int main() {
 	
 	cout << "SIZE OF IMAGE INPUT ROW = " << fftInputRow.size() << '\n';
 	unsigned char* image_fft;
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\frequence_3_3_2d_FFT_test.png";
+	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\owl.png";
 	int fftHeight, fftWidth, fftNumChannels;
 	image_fft = stbi_load(pathToImage.c_str(), &fftWidth, &fftHeight, &fftNumChannels, 0);
 	cout << "NUM COLOR CHANNELS  =  " << fftNumChannels << " WIDTH = " << fftWidth << " HEIGHT = " << fftHeight << '\n';
@@ -250,7 +250,7 @@ int main() {
 		
 			complex<float> c_img((float)image_fft[y1]/255.0f, 0.0f);
 			
-			y1 += 4;
+			y1 += 3;//INCORRECT STRIDE MIGHT BE PROBLEM 1#
 			
 			one_row.push_back(c_img);
 
@@ -328,7 +328,7 @@ int main() {
 
 		if (save) {
 
-				saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\INVERSE_rect_orig_16.png");
+				saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\INVERSE_owl_0.png");
 				//save = false;
 		}
 		

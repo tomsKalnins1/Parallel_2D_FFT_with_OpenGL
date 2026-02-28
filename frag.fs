@@ -28,7 +28,9 @@ void main(){
 		
 	vec2 freq = texelFetch(real_imag, ivec2(x, y), 0).rg;
 
-	ivec2 coors = ivec2(TexCoor * 256.0);
+	ivec2 coors = ivec2(TexCoor * 256.0); //LITERALLY THIS ONE LINE CAUSE ME TO SPEND MANY DAYS PRINTIGN VALUES AND DEBUGGIND, AND LOSING MY MIND ->
+											//on mac os the floating point operations are done differently that on windows due to I guess CPU architecture
+											//but what ever is the exact difference it is large enough to accumulate to insane level to make 2f IFFT output awful
 		
 	float angle  = 2.0 * M_PI * (x * coors.x / 256.0 + y * coors.y /256.0);
 
