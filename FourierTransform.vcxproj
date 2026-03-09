@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\Iterative_fft\Main.cpp" />
     <ClCompile Include="fft_2D.cpp" />
     <ClCompile Include="EBO.cpp" />
     <ClCompile Include="glad.c" />
@@ -169,9 +170,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="comp_frag.fs" />
     <None Include="frag.fs" />
     <None Include="fragFrameBuffer.fs" />
     <None Include="fragMesh.fs" />
+    <None Include="test_compute.comp" />
+    <None Include="test_compute_horiz.cs" />
+    <None Include="test_compute_vert.cs" />
     <None Include="vert.vs" />
     <None Include="vertFrameBuffer.vs" />
     <None Include="vertMesh.vs" />

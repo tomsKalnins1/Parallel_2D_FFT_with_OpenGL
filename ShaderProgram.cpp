@@ -18,7 +18,7 @@ string getFileContent(const char* path) {
 
 		in.close();
 
-
+	//	cout << content << '\n';
 
 		return content;
 	
@@ -68,6 +68,8 @@ Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 		glGetProgramInfoLog(ID, 1024, NULL, infoLog);
 		std::cout << "Framebuffer shader PROGRAM LINK FAILED:\n" << infoLog << std::endl;
 	}
+
+
 
 	glDeleteShader(vertID);
 	glDeleteShader(fragID);

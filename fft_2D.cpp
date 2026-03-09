@@ -68,6 +68,49 @@ vector<complex<float>> fft2D::fft_1D(vector<complex<float>> signal) {
 	return components;
 }
 
+int reverseBits(unsigned int n) {
+	int ans = 0;
+	int i = 0;
+	// traversing bits of 'n' from the right
+	while (n > 0 && i < 32) {
+
+		// bitwise left shift
+		// 'ans' by 1
+		ans <<= 1;
+
+		// if current bit is '1'
+		if (n & 1 == 1)
+			ans |= 1;
+
+		// bitwise right shift
+		// 'n' by 1
+		n >>= 1;
+
+		cout << "ans  = " << ans << '\n';
+
+		i++;
+
+	}
+
+	// required number
+
+//	cout << "ans = " << ans;
+	return ans;
+}
+
+vector<complex<float>> ddt_1D_2(vector<complex<float>> signal) {
+
+	int len = signal.size();
+
+	float num_lvls = log(len);
+
+	cout << "num_lvls = " << len << '\n';
+
+	return signal;
+
+}
+
+
 vector<vector<complex<float>>> fft2D::fft_2D(vector<vector<complex<float>>> signalRow) {
 	cout << "2D FFT CALLED !" << endl;
 	int size = signalRow.size();

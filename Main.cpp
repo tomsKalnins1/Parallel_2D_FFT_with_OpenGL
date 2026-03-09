@@ -32,25 +32,9 @@ extern int extr;
 
 extern string getFileContent(const char* path);
 
-vector<complex<float>> fftOutput(256);
-
-float deltaTime = 0.0f;
-float lastTime = 0.0f;
-
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0, -1.0f);
-glm::vec3 upDirection = glm::vec3(0.0f, 1.0f, 0.0f);
-glm::vec3 moveDown = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 moveUp = glm::vec3(0.0f, 0.0f, 0.0f);
-
-float pitch = 0.0f; //around x
-float yaw = -90.0f; //arounf y
-//float roll  = 0.0f; //around z
-
-float lastX = 500.0f;
-float lastY = 500.0f;
-
-bool mouseFirstMove = true; //the first move of mouse resuls in too large offset => causes jump when the mouse enters the window 
+//vector<complex<float>> fftOutput(256);
+float last_time = 0;
+float delta_time = 0;
 
 
 void saveImg(string path) {
@@ -69,100 +53,18 @@ void saveImg(string path) {
 
 }
 
-void processInput(GLFWwindow* window) {
-
-	float currTime = glfwGetTime();
-	deltaTime = currTime - lastTime;
-	lastTime = currTime;
-
-	const float cameraSpeed = 1.0f * deltaTime;
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-
-		cameraPos += cameraFront * cameraSpeed;
-		cout << "w";
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-
-		cameraPos -= cameraFront * cameraSpeed;
-
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-
-		cameraPos += glm::normalize(glm::cross(cameraFront, upDirection)) * cameraSpeed;
-
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-
-		cameraPos -= glm::normalize(glm::cross(cameraFront, upDirection)) * cameraSpeed;
-
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-
-		cameraPos += upDirection * cameraSpeed;
-
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-
-		cameraPos -= upDirection * cameraSpeed;
-
-	}
-
-}
-
-void mousePositionCallBack(GLFWwindow* window, double xPos, double yPos) {
-
-	if (mouseFirstMove) {
-
-		lastX = xPos;
-		lastY = yPos;
-
-		mouseFirstMove = false;
-
-	}
-
-	float xOffset = xPos - lastX;
-	float yOffset = lastY - yPos; //flipped because the y axis for screens is filpped, so need to be reverted to use for regular coordinate system
-
-	lastX = xPos;
-	lastY = yPos;
-
-	float sensitivity = 0.01f;
-
-	yaw += xOffset * sensitivity;
-	pitch += yOffset * sensitivity;
-
-	glm::vec3 direction;
-	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	direction.y = sin(glm::radians(pitch));
-	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-
-	cameraFront = glm::normalize(direction);
-
-
-}
-
-
 bool save = true;
 
 int main() {
 
-	//	cout << "EXTERN FUNCTION BEING CALLED" << endl;
-	//	string fragFile = getFileContent("fragFrameBuffer.fs");
-	//	cout << "FILE CONTENT FROM EXTERN FUNCTION : \n " << fragFile << " \t END OF FILE" << endl;
-
-	//	cout << "VECTOR_TO_STRING  = " << glm::to_string(cameraPos) << endl;
 
 	glfwInit();
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	
 
 	GLFWwindow* window = glfwCreateWindow(256, 256, "Framebuffer", NULL, NULL);
 
@@ -201,9 +103,212 @@ int main() {
 	
 	glViewport(0, 0, 256, 256);
 
+	cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
+
 	Shader sh(v.c_str(), f.c_str());
 
 	Shader shF(frame_b_vert.c_str(), frabe_b_frag.c_str());
+
+	//-----------------COMPUTE SHADER
+
+	string comp_file = "test_compute_horiz.cs";
+
+
+	string comp_shader_text = getFileContent(comp_file.c_str());
+	const char* comp_shader_source = comp_shader_text.c_str();
+
+	GLuint comp_shader_id = glCreateShader(GL_COMPUTE_SHADER);
+	
+	glShaderSource(comp_shader_id, 1, &comp_shader_source, NULL);
+	glCompileShader(comp_shader_id);
+
+	GLuint comp_sh_program_id = glCreateProgram();
+	glAttachShader(comp_sh_program_id, comp_shader_id);
+	glLinkProgram(comp_sh_program_id);
+
+	GLint linkSuccess = 0;
+	glGetProgramiv(comp_sh_program_id, GL_LINK_STATUS, &linkSuccess);
+	if (linkSuccess == GL_FALSE) {
+		char infoLog[1024];
+		glGetProgramInfoLog(comp_sh_program_id, 1024, NULL, infoLog);
+		std::cout << "COMPUTE SAHDER PROGRAM LINK FAILED:\n" << infoLog << std::endl;
+	}
+
+	GLint success;
+	glGetShaderiv(comp_shader_id, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		char infoLog[1024];
+		glGetShaderInfoLog(comp_shader_id, 1024, NULL, infoLog);
+		std::cout << "COMPUTE SHADER COMPILATION FAILED:\n" << infoLog << std::endl;
+	}
+
+	string comp_frag = "comp_frag.fs";
+	Shader comp(v.c_str(), comp_frag.c_str());
+	comp.Use();
+	Shader::setUniform(comp.ID, "screen", (unsigned int)0);
+
+
+
+	unsigned int texture;
+
+	float* image_fft;
+	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\camera_man.png";
+	int fftHeight, fftWidth, fftNumChannels;
+	image_fft = stbi_loadf(pathToImage.c_str(), &fftWidth, &fftHeight, &fftNumChannels, 0);
+
+	glGenTextures(1, &texture);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, image_fft);
+
+//------------------------------------Bind the source texture befor even the output texture is bound, but it can also be done
+									//  at render loop, but most importantly has to be bound to the RIGHT texture unit before comp shader dispatch
+	unsigned int tex_source;
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	tex_source = glGetUniformLocation(comp_sh_program_id, "screen");
+	glUniform1i(tex_source, 0);
+
+	unsigned int perm_out_1;//image2D after 1st permutation
+
+	glGenTextures(1, &perm_out_1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, perm_out_1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
+	
+	glBindImageTexture(1, perm_out_1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F); //FIRST ARG SPECIFIES THE BINDING BASEN ON WHICH COMP SHADER KNOWS WHICH IMAGE TEXTURE TO SAMPLE FROM
+
+
+
+
+	//glActiveTexture(GL_TEXTURE1);
+	//glBindTexture(GL_TEXTURE_2D, perm_out_1);
+
+	//----------------------------------------------Texture  rg32f after horizontal fft
+
+	unsigned int first_fft;//image2D after 1st permutation
+
+	glGenTextures(1, &first_fft);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, first_fft);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
+
+	glBindImageTexture(2, first_fft, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F); //FIRST ARG SPECIFIES THE BINDING BASEN ON WHICH COMP SHADER KNOWS WHICH IMAGE TEXTURE TO SAMPLE FROM
+
+
+
+
+	//glActiveTexture(GL_TEXTURE2);
+	//glBindTexture(GL_TEXTURE_2D, first_fft);
+
+
+	unsigned int comp_sh_tex_loc;
+
+
+	glUseProgram(comp_sh_program_id);
+
+
+
+	//glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	glDispatchCompute((unsigned int)ceil(256 / 256), (unsigned int)ceil(256 / 1), 1);
+
+
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	//-------------------------------------------------------COMPUTE SHADER NR 2
+	string comp_file_2 = "test_compute_vert.cs";
+
+
+	string comp_shader_text_2 = getFileContent(comp_file_2.c_str());
+	const char* comp_shader_source_2 = comp_shader_text_2.c_str();
+
+	GLuint comp_shader_id_2 = glCreateShader(GL_COMPUTE_SHADER);
+
+	glShaderSource(comp_shader_id_2, 1, &comp_shader_source_2, NULL);
+	glCompileShader(comp_shader_id_2);
+
+	GLuint comp_sh_program_id_2 = glCreateProgram();
+	glAttachShader(comp_sh_program_id_2, comp_shader_id_2);
+	glLinkProgram(comp_sh_program_id_2);
+
+	GLint linkSuccess_2 = 0;
+	glGetProgramiv(comp_sh_program_id_2, GL_LINK_STATUS, &linkSuccess_2);
+	if (linkSuccess_2 == GL_FALSE) {
+		char infoLog_2[1024];
+		glGetProgramInfoLog(comp_sh_program_id_2, 1024, NULL, infoLog_2);
+		std::cout << "COMPUTE  2  SAHDER PROGRAM LINK FAILED:\n" << infoLog_2 << std::endl;
+	}
+
+	GLint success_2;
+	glGetShaderiv(comp_shader_id_2, GL_COMPILE_STATUS, &success_2);
+	if (!success_2) {
+		char infoLog_3[1024];
+		glGetShaderInfoLog(comp_shader_id_2, 1024, NULL, infoLog_3);
+		std::cout << "COMPUTE  2  SHADER COMPILATION FAILED:\n" << infoLog_3 << std::endl;
+	}
+
+
+	unsigned int second_fft;//image2D after 1st permutation
+
+
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, first_fft);
+
+	glBindImageTexture(0, first_fft, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F); //FIRST ARG SPECIFIES THE BINDING BASEN ON WHICH COMP SHADER KNOWS WHICH IMAGE TEXTURE TO SAMPLE FROM
+	
+	unsigned int output_1;//image2D after 1st permutation
+
+	glGenTextures(1, &output_1);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, output_1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
+
+	glBindImageTexture(1, output_1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+
+	/*
+	glGenTextures(1, &second_fft);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, second_fft);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
+	*/
+	glUseProgram(comp_sh_program_id_2);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, first_fft);
+
+	glBindImageTexture(1, output_1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	//glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	glDispatchCompute((unsigned int)ceil(256 / 1), (unsigned int)ceil(256 / 256), 1);
+
+
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+
+	//-----------------COMPUTE SHADER
 
 	VAO vao;
 
@@ -219,8 +324,8 @@ int main() {
 //	Texture tex("image.png", false);
 
 
-
 	
+	/*
 
 	fft2D fft(256.0f, 256.0f);
 	
@@ -228,7 +333,7 @@ int main() {
 	
 	cout << "SIZE OF IMAGE INPUT ROW = " << fftInputRow.size() << '\n';
 	unsigned char* image_fft;
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\owl.png";
+	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\camera_man.png";
 	int fftHeight, fftWidth, fftNumChannels;
 	image_fft = stbi_load(pathToImage.c_str(), &fftWidth, &fftHeight, &fftNumChannels, 0);
 	cout << "NUM COLOR CHANNELS  =  " << fftNumChannels << " WIDTH = " << fftWidth << " HEIGHT = " << fftHeight << '\n';
@@ -296,10 +401,14 @@ int main() {
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+	*/
 
 
 	
+	int add_waves = 0;
+
+
+
 	
 
 	while (!glfwWindowShouldClose(window)) {
@@ -310,13 +419,37 @@ int main() {
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		sh.Use();
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, fft_output_texture);
+		
+		
 
+
+	
+		
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		/*
+		comp.Use();
+
+		unsigned int tex_loc_cs;
+		tex_loc_cs = glGetUniformLocation(comp.ID, "screen");
+		glUniform1i(tex_loc_cs, 3);//mistake before due to forgettig to set this to 1 which was 0 that was set earlier
+//		Shader::setUniform(sh.ID, "screen", (unsigned int)0);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, output_1);
+
+		*/
+		
+		
+		
+		sh.Use();
+		
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, output_1);
 
 		int location_tex = glGetUniformLocation(sh.ID, "real_imag");
-		glUniform1i(location_tex, 1);
+		glUniform1i(location_tex, 3);
+		glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
+		
+		
 
 		vao.Bind();
 	
@@ -328,7 +461,7 @@ int main() {
 
 		if (save) {
 
-				saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\INVERSE_owl_0.png");
+				saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\COMP_SHADER_TEST_8.png");
 				//save = false;
 		}
 		
@@ -336,8 +469,22 @@ int main() {
 
 		glfwSwapBuffers(window);
 
-	}
+		/*
+		float curr_time = glfwGetTime();
+		delta_time += curr_time - last_time;
+		last_time = curr_time;
+	//	cout << "DELTA TIME = " << delta_time;
+		if (delta_time > 0.1f && add_waves <= 256) {
+			delta_time = 0;
+			add_waves+=1;
 
+		//	cout << add_waves;
+		}
+
+	//	add_waves = (add_waves <= 256) ? add_waves += 1 : 256;
+	*/
+	}
+	
 
 	glfwDestroyWindow(window);
 

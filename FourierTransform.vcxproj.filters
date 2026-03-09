@@ -91,5 +91,20 @@
     <None Include=".gitignore">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="test_compute.comp">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="comp_frag.fs">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\Iterative_fft\Main.cpp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="test_compute_vert.cs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="test_compute_horiz.cs">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

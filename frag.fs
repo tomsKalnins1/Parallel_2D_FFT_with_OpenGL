@@ -11,7 +11,7 @@ in vec2 TexCoor;
 
 uniform sampler2D real_imag;
 
-
+uniform int wave_lim;
 
 
 
@@ -25,10 +25,10 @@ void main(){
 	for(int x = 0; x < 256; x++){
 	
 	for(int y  = 0; y < 256; y++){
-		
-	vec2 freq = texelFetch(real_imag, ivec2(x, y), 0).rg;
+		//vec2 freq = texture(real_imag, TexCoor).rg;
+		vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
 
-	ivec2 coors = ivec2(TexCoor * 256.0); //LITERALLY THIS ONE LINE CAUSE ME TO SPEND MANY DAYS PRINTIGN VALUES AND DEBUGGIND, AND LOSING MY MIND ->
+	ivec2 coors = ivec2(TexCoor * 255.0); //LITERALLY THIS ONE LINE CAUSE ME TO SPEND MANY DAYS PRINTIGN VALUES AND DEBUGGIND, AND LOSING MY MIND ->
 											//on mac os the floating point operations are done differently that on windows due to I guess CPU architecture
 											//but what ever is the exact difference it is large enough to accumulate to insane level to make 2f IFFT output awful
 		
@@ -41,7 +41,7 @@ void main(){
 	
 	}
 
-	float normalize = 1.0 / (256.0 * 256.0);
+	float normalize = 2.0 / (256.0 * 256.0);
 
 	waveSum *= normalize;
 
@@ -49,6 +49,9 @@ void main(){
 
 	FragColor = vec4(waveSum, waveSum, waveSum, 1.0);
 	//FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+	//FragColor = texelFetch(real_imag, ivec2(TexCoor * 255), 0);
+
+
 
 
 
