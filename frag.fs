@@ -41,7 +41,7 @@ void main(){
 	
 	}
 
-	float normalize = 2.0 / (256.0 * 256.0);
+	float normalize = 1.0 / (256.0 * 256.0);
 
 	waveSum *= normalize;
 

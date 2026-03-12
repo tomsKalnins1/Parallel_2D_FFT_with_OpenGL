@@ -97,7 +97,6 @@ void permutate1(){
 
         vec4  temp = texelFetch(screen, texCoor, 0);
 
-     //   cache[rev(texCoor.x, bits)] = temp;
 
         real_imag[rev(texCoor.x, bits)] = vec2(temp.x, 0.0);
 
@@ -194,30 +193,20 @@ void main()
 
     permutate1();
 
-    
     fft();
+
+
 
     ivec2 texC_g = ivec2(gl_GlobalInvocationID.xy);
 
     vec2 fft_res = real_imag[gl_LocalInvocationIndex];
 
-    //synchronize();
 
     vec4 v = vec4(fft_res.x, fft_res.y, 0.0, 1.0);
 
-    //ivec2 texC_g_1 = ivec2(gl_GlobalInvocationID.x + 128, gl_GlobalInvocationID.y);
-
-    //vec2 fft_res_1 = real_imag[gl_LocalInvocationIndex + 128];
-
-    //synchronize();
-
-   // vec4 v_1 = vec4(fft_res_1.x, fft_res_1.y, 0.0, 1.0);
 
     imageStore(fft_data, texC_g, v);
 
- //   synchronize();
-
-//    imageStore(fft_data, texC_g_1, v_1);
 
 
 }
