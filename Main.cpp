@@ -221,8 +221,7 @@ int main() {
 
 
 
-	//glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-
+	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	glDispatchCompute((unsigned int)ceil(256 / 256), (unsigned int)ceil(256 / 1), 1);
 
 
@@ -265,23 +264,10 @@ int main() {
 
 
 
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, first_fft);
-
-	glBindImageTexture(0, first_fft, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F); //FIRST ARG SPECIFIES THE BINDING BASEN ON WHICH COMP SHADER KNOWS WHICH IMAGE TEXTURE TO SAMPLE FROM
 	
-	unsigned int output_1;//image2D after 1st permutation
 
-	glGenTextures(1, &output_1);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, output_1);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
 
-	glBindImageTexture(1, output_1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
 
 
 	/*
@@ -294,13 +280,29 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
 	*/
+
+	 //FIRST ARG SPECIFIES THE BINDING BASEN ON WHICH COMP SHADER KNOWS WHICH IMAGE TEXTURE TO SAMPLE FROM
+	unsigned int output_1;//image2D after 1st permutation
+
+	glGenTextures(1, &output_1);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, output_1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
+
+
 	glUseProgram(comp_sh_program_id_2);
-	glActiveTexture(GL_TEXTURE5);
+	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, first_fft);
+
+	glBindImageTexture(0, first_fft, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	glBindImageTexture(1, output_1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
-	//glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+//	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	glDispatchCompute((unsigned int)ceil(256 / 1), (unsigned int)ceil(256 / 256), 1);
 
@@ -406,7 +408,9 @@ int main() {
 
 	
 	int add_waves = 0;
+	unsigned int loc_num_waves = glGetUniformLocation(sh.ID, "wave_lim");
 
+	
 
 
 	
@@ -443,7 +447,9 @@ int main() {
 		sh.Use();
 		
 		glActiveTexture(GL_TEXTURE3);
+		//glBindTexture(GL_TEXTURE_2D, texture);
 		glBindTexture(GL_TEXTURE_2D, output_1);
+		//glBindTexture(GL_TEXTURE_2D, first_fft);
 
 		int location_tex = glGetUniformLocation(sh.ID, "real_imag");
 		glUniform1i(location_tex, 3);
@@ -469,7 +475,7 @@ int main() {
 
 		glfwSwapBuffers(window);
 
-		/*
+		
 		float curr_time = glfwGetTime();
 		delta_time += curr_time - last_time;
 		last_time = curr_time;
@@ -480,9 +486,10 @@ int main() {
 
 		//	cout << add_waves;
 		}
+		glUniform1i(loc_num_waves, add_waves);
 
-	//	add_waves = (add_waves <= 256) ? add_waves += 1 : 256;
-	*/
+		add_waves = (add_waves <= 256) ? add_waves += 1 : 256;
+	
 	}
 	
 

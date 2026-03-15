@@ -106,5 +106,8 @@
     <None Include="test_compute_horiz.cs">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="Main-3.cpp">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

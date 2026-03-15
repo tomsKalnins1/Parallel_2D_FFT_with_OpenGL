@@ -22,9 +22,9 @@ void main(){
 	float waveSum = 0;
 
 
-	for(int x = 0; x < 256; x++){
+	for(int x = 0; x < wave_lim; x++){
 	
-	for(int y  = 0; y < 256; y++){
+	for(int y  = 0; y < wave_lim; y++){
 		//vec2 freq = texture(real_imag, TexCoor).rg;
 		vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
 

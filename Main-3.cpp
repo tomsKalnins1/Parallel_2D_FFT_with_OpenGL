@@ -7,7 +7,7 @@
 #include <barrier>
 #include <mutex>
 
-//#define M_PI 3.14159265358979323846264338
+#define M_PI 3.14159265358979323846264338
 
 using namespace std;
 
