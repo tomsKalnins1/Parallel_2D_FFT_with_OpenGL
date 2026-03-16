@@ -1,10 +1,12 @@
 #version 430 core
-layout(local_size_x = 1, local_size_y = 128, local_size_z = 1) in;
+layout(local_size_x = 1, local_size_y = 64, local_size_z = 1) in;
 
 layout(rgba32f, binding = 0) uniform image2D fft_data; //input for vertical fft in this shader
 layout(rgba32f, binding = 1) uniform image2D output_1;
 
 #define M_PI 3.1415926535897932384626433832795
+
+uniform int num_samples_v;
 
 shared vec2 input[256];
 shared vec2 real_imag_buffer[256];
@@ -95,16 +97,16 @@ void loadPixs_from_img()
 
     ivec2 texCoor = ivec2(gl_GlobalInvocationID.xy);
 
-    vec2 val_0 = vec2(imageLoad(fft_data, texCoor).xy);
-    vec2 val_1 = vec2(imageLoad(fft_data, ivec2(texCoor.x, texCoor.y + 128)).xy);
+    for (int i = 0; i < num_samples_v / gl_WorkGroupSize.y; i++)
+    {
 
-    input[texCoor.y] = val_0;
+        vec2 val_1 = vec2(imageLoad(fft_data, ivec2(texCoor.x, texCoor.y + 64 * i)).x, imageLoad(fft_data, ivec2(texCoor.x, texCoor.y + 64 * i)).y);
 
-    synchronize();
+        input[texCoor.y + 64 * i] = val_1;
 
-    input[texCoor.y + 128] = val_1;
+        synchronize();
 
-    synchronize();
+    }
 
 }
 
@@ -117,15 +119,15 @@ void loadPixs_buffer_to_input()
 
 
 
-    input[texCoor.y] = real_imag_buffer[texCoor.y];
 
+    for (int i = 0; i < num_samples_v / gl_WorkGroupSize.y; i++)
+    {
 
-    synchronize();
+        input[texCoor.y + 64 * i] = real_imag_buffer[texCoor.y + 64 * i];
 
-    input[texCoor.y + 128] = real_imag_buffer[texCoor.y + 128];
+        synchronize();
 
-
-    synchronize();
+    }
 }
 
 //-------------------------------------------------------------------------LOAD PIXELS FROM BUFFER TO INPUT
@@ -136,15 +138,14 @@ void loadPixs_input_to_buffer(){
 
 
 
-    real_imag_buffer[texCoor.y] = input[texCoor.y];
+    for (int i = 0; i < num_samples_v / gl_WorkGroupSize.y; i++)
+    {
 
+        real_imag_buffer[texCoor.y + 64 * i] = input[texCoor.y + 64 * i];
 
-    synchronize();
+        synchronize();
 
-    real_imag_buffer[texCoor.y + 128] = input[texCoor.y + 128];
-
-
-    synchronize();
+    }
 }
 
 
@@ -159,24 +160,27 @@ void permutate(){
 
     //this is repetative calculation !! later set the num of bytes as uniform or somoething
 
-    while (num < gl_WorkGroupSize.y * 2){
+    while (num < num_samples_v)
+    {
 
         num <<= 1;
         bits++;
 
     }
+    ivec2 texCoor = ivec2(gl_GlobalInvocationID.xy);
 
-    uint t_id = gl_LocalInvocationIndex;
+    uint t_id = texCoor.y;
 
-    real_imag_buffer[t_id] = input[rev(t_id, bits)];
+    for (int i = 0; i < num_samples_v / gl_WorkGroupSize.y; i++)
+    {
 
-  //  synchronize();
+        uint pair = t_id + 64 * i;
 
-    uint pair = t_id + 128;
+        real_imag_buffer[pair] = input[rev(pair, bits)];
 
-    real_imag_buffer[pair] = input[rev(pair, bits)];
+        synchronize();
 
-    synchronize();
+    }
 
 }
 
@@ -187,25 +191,29 @@ void permutate(){
 
 void fft(){
 
-  
 
+    ivec2 texC_g = ivec2(gl_GlobalInvocationID.xy);
 
     uint k = 2;
-    uint num_lvls = uint(log2(gl_WorkGroupSize.y * 2));
+    uint t_id = texC_g.y;
+    uint num_lvls = uint(log2(num_samples_v));
+    uint bttrfls_per_thrd = (num_samples_v / 2) / gl_WorkGroupSize.y;
 
-    for(uint lvl = 0; lvl < num_lvls; lvl++){
+    for (uint lvl = 0; lvl < num_lvls; lvl++){
 
 
             vec4 v = vec4(0.0);
             vec4 v_1 = vec4(0.0);
 
-            float angle = 2.0 * M_PI * float((gl_LocalInvocationIndex) % (k/2)) / float(k);
+        for (int b = 0; b < bttrfls_per_thrd; b++)
+        {
+            float angle = 2.0 * M_PI * float((t_id * bttrfls_per_thrd + b) % (k / 2)) / float(k);
 
-            vec2 twiddle = vec2(cos(angle), -sin(angle)); 
+            vec2 twiddle = vec2(cos(angle), -sin(angle));
 
 
-            uint block = gl_LocalInvocationIndex / (k / 2);
-            uint offset = gl_LocalInvocationIndex % (k / 2);
+            uint block = (t_id * bttrfls_per_thrd + b) / (k / 2);
+            uint offset = (t_id * bttrfls_per_thrd + b) % (k / 2);
 
             uint e = block * k + offset;
             uint o = e + (k / 2);
@@ -236,7 +244,7 @@ void fft(){
 
 
             synchronize();
-
+        }
 
         k *= 2;
         synchronize();
@@ -267,15 +275,14 @@ void main()
 
     ivec2 texC_g = ivec2(gl_GlobalInvocationID.xy);
 
-    vec2 v_0 = vec2(input[texC_g.y].x, input[texC_g.y].y);
+    for (int i = 0; i < num_samples_v / gl_WorkGroupSize.y; i++)
+    {
 
-    vec2 v_1 = vec2(input[texC_g.y + 128].x, input[texC_g.y + 128].y);
+        vec2 v = vec2(input[texC_g.y + 64 * i].x, input[texC_g.y + 64 * i].y);
+        vec4 v_out = vec4(v.x, v.y, 0.0, 0.0);
+        imageStore(output_1, ivec2(texC_g.x, texC_g.y + 64 * i), v_out);
 
-    vec4 v_0_0 = vec4(v_0.x, v_0.y, 0.0, 0.0);
-    vec4 v_1_1 = vec4(v_1.x, v_1.y, 0.0, 0.0);
-
-    imageStore(output_1, texC_g, v_0_0);
-    imageStore(output_1, ivec2(texC_g.x, texC_g.y + 128), v_1_1);
+    }
 
 
 

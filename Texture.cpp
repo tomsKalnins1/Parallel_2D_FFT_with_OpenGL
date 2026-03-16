@@ -1,6 +1,9 @@
 #include "Texture.h"
 
-Texture::Texture(string fileName, bool useFrameBuffer) {
+Texture::Texture(string fileName = "no_file", GLenum internal_format = GL_RGBA32F, GLenum format = GL_RGBA, int w = 256, int h = 256) : filename{fileName}, 
+internal_color_format{ internal_format }, color_format{ format }, width{ w }, height{ h } {
+
+
 
 	glGenTextures(1, &ID);
 
@@ -14,45 +17,21 @@ Texture::Texture(string fileName, bool useFrameBuffer) {
 
 
 
-	if (useFrameBuffer) {
-
-		//unsigned int FBO;
-		glGenFramebuffers(1, &fboID);
-		glBindFramebuffer(GL_FRAMEBUFFER, fboID);//!mistake forgot to put fboID instead of ID (black object)
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-
+	stbi_set_flip_vertically_on_load(true);//images usualy have 0,0 at top left but opengl expects that coordinate at bottom left as for texture coordinates
 	
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ID, 0);
-		
-		//render buffer object is responsible for storing depth information after the frame buffer content is used as atexture
-		unsigned int RBO;
-		glGenRenderbuffers(1, &RBO);
-		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 256, 256);
-	//	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	if (filename != "no_file") {
 
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+		image = stbi_loadf((fileName).c_str(), &width, &height, &numColorChannels, 0);
 
-
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-
-			cout << "ERROR :: FRAMEBUFFER :: Framebuffer is not complete !" << endl;
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		}
-	}
-	else {
-
-
-		stbi_set_flip_vertically_on_load(true);//images usualy have 0,0 at top left but opengl expects that coordinate at bottom left as for texture coordinates
-		image = stbi_load((fileName).c_str(), &width, &height, &numColorChannels, 0);
-
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, image);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 	}
+	else {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
+	}
+
 
 
 }

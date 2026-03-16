@@ -157,7 +157,7 @@ int main() {
 	image_fft = stbi_loadf(pathToImage.c_str(), &fftWidth, &fftHeight, &fftNumChannels, 0);
 
 	glGenTextures(1, &texture);
-	glActiveTexture(GL_TEXTURE0);
+	//glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -167,37 +167,16 @@ int main() {
 
 //------------------------------------Bind the source texture befor even the output texture is bound, but it can also be done
 									//  at render loop, but most importantly has to be bound to the RIGHT texture unit before comp shader dispatch
-	unsigned int tex_source;
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	tex_source = glGetUniformLocation(comp_sh_program_id, "screen");
-	glUniform1i(tex_source, 0);
+									//  at render loop, but most importantly has to be bound to the RIGHT texture unit before comp shader dispatch
 
-	unsigned int perm_out_1;//image2D after 1st permutation
-
-	glGenTextures(1, &perm_out_1);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, perm_out_1);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
-	
-	glBindImageTexture(1, perm_out_1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F); //FIRST ARG SPECIFIES THE BINDING BASEN ON WHICH COMP SHADER KNOWS WHICH IMAGE TEXTURE TO SAMPLE FROM
-
-
-
-
-	//glActiveTexture(GL_TEXTURE1);
-	//glBindTexture(GL_TEXTURE_2D, perm_out_1);
 
 	//----------------------------------------------Texture  rg32f after horizontal fft
 
 	unsigned int first_fft;//image2D after 1st permutation
 
 	glGenTextures(1, &first_fft);
-	glActiveTexture(GL_TEXTURE2);
+	/*Texure has an ID and it can be bound to a certain texture unit,apparently when binding it and to */
+	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, first_fft);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -219,9 +198,10 @@ int main() {
 
 	glUseProgram(comp_sh_program_id);
 
+	unsigned int n_samples = glGetUniformLocation(comp_sh_program_id, "num_samples_h");
+	glUniform1i(n_samples, 256);
 
-
-	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	//glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	glDispatchCompute((unsigned int)ceil(256 / 256), (unsigned int)ceil(256 / 1), 1);
 
 
@@ -295,6 +275,10 @@ int main() {
 
 
 	glUseProgram(comp_sh_program_id_2);
+
+	unsigned int n_samples_2 = glGetUniformLocation(comp_sh_program_id_2, "num_samples_v");
+	glUniform1i(n_samples_2, 256);
+
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, first_fft);
 

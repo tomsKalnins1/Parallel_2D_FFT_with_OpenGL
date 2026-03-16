@@ -10,7 +10,7 @@ layout(rgba32f, binding = 2) uniform image2D fft_data;
 
 #define M_PI 3.1415926535897932384626433832795
 
-uniform int num_samples;
+uniform int num_samples_h;
 
 shared vec2 input[256];
 shared vec2 real_imag_buffer[256];
@@ -126,7 +126,7 @@ void loadPixs_from_img() {
     synchronize();
     */
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < num_samples_h / gl_WorkGroupSize.x ; i++) {
 
         vec2 val_1 = vec2(texelFetch(screen, ivec2(texCoor.x + 64 * i, texCoor.y), 0).x, 0.0);
 
@@ -169,7 +169,7 @@ void loadPixs_buffer_to_input()
 
     */
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < num_samples_h / gl_WorkGroupSize.x; i++)
     {
 
         input[texCoor.x + 64 * i] = real_imag_buffer[texCoor.x + 64 * i];
@@ -211,7 +211,7 @@ void loadPixs_input_to_buffer()
     synchronize();
     */
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < num_samples_h / gl_WorkGroupSize.x; i++)
     {
 
         real_imag_buffer[texCoor.x + 64 * i] = input[texCoor.x + 64 * i];
@@ -230,7 +230,7 @@ void permutate(){
 
     //this is repetative calculation !! later set the num of bytes as uniform or somoething
 
-    while(num < gl_WorkGroupSize.x * 4)
+    while(num < num_samples_h)
     {
         
         num <<= 1;
@@ -264,7 +264,7 @@ void permutate(){
 
         synchronize();
         */
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < num_samples_h / gl_WorkGroupSize.x; i++)
     {
 
         uint pair = t_id + 64 * i;
@@ -293,21 +293,23 @@ void fft(){
 
 
     uint k = 2;
-    uint num_lvls = uint(log2(256));
+    uint num_lvls = uint(log2(num_samples_h));
 
-    for(uint lvl = 0; lvl < num_lvls; lvl++){
+    uint bttrfls_per_thrd = (num_samples_h / 2) / gl_WorkGroupSize.x;
+
+    for (uint lvl = 0; lvl < num_lvls; lvl++){
 
         vec4 v = vec4(0.0);
         vec4 v_1 = vec4(0.0);
 
-        for (int b = 0; b < 2; b++) {
+        for (int b = 0; b < bttrfls_per_thrd; b++) {
 
-            float angle = 2.0 * M_PI * float((t_id * 2 + b) % (k / 2)) / float(k);
+            float angle = 2.0 * M_PI * float((t_id * bttrfls_per_thrd + b) % (k / 2)) / float(k);
 
             vec2 twiddle = vec2(cos(angle), -sin(angle));
 
-            uint block = (t_id * 2 + b) / (k / 2);
-            uint offset = (t_id * 2  + b) % (k / 2);
+            uint block = (t_id * bttrfls_per_thrd + b) / (k / 2);
+            uint offset = (t_id * bttrfls_per_thrd + b) % (k / 2);
 
             uint e = block * k + offset;
             uint o = e + (k / 2);
@@ -406,7 +408,7 @@ void main()
     imageStore(fft_data, ivec2(texC_g.x + 64 * 3, texC_g.y), v_3_3);
 
     */
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < num_samples_h / gl_WorkGroupSize.x; i++)
     {
 
         vec2 v = vec2(input[texC_g.x + 64 * i].x, input[texC_g.x + 64 * i].y);

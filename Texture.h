@@ -12,15 +12,19 @@ class Texture{
 
 public:
 	unsigned int ID;
-	unsigned int fboID;
 	int height;
 	int width;
 	int numColorChannels;
-	unsigned char* image;
+	GLenum color_format;
+	GLenum internal_color_format;
+	float* image;
+	string filename;
 
-	Texture(string fileName, bool useFrameBuffer);
+	Texture(string fileName, GLenum internal_format, GLenum format, int w, int h);
 
 	void Bind();
+
+	void BindUnit(int num_image_unit);
 
 	void Unbind();
 
