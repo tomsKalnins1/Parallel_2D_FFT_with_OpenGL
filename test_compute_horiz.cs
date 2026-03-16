@@ -3,12 +3,14 @@
 
 
 
-layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 layout(binding = 0) uniform sampler2D screen;
 layout(rgba32f, binding = 1) uniform image2D screen_out;
 layout(rgba32f, binding = 2) uniform image2D fft_data;
 
 #define M_PI 3.1415926535897932384626433832795
+
+uniform int num_samples;
 
 shared vec2 input[256];
 shared vec2 real_imag_buffer[256];
@@ -99,18 +101,40 @@ uint rev(uint n, uint num_bits){
 void loadPixs_from_img() {
 
     ivec2 texCoor = ivec2(gl_GlobalInvocationID.xy);
-
+    /*
     vec2 val_0 = vec2(texelFetch(screen, texCoor, 0).x, 0.0);
-    vec2 val_1 = vec2(texelFetch(screen, ivec2(texCoor.x + 128, texCoor.y), 0).x, 0.0);
+    vec2 val_1 = vec2(texelFetch(screen, ivec2(texCoor.x + 64 * 1, texCoor.y), 0).x, 0.0);
+    vec2 val_2 = vec2(texelFetch(screen, ivec2(texCoor.x + 64 * 2, texCoor.y), 0).x, 0.0);
+    vec2 val_3 = vec2(texelFetch(screen, ivec2(texCoor.x + 64 * 3, texCoor.y), 0).x, 0.0);
 
     input[texCoor.x] = val_0;
 
     synchronize();
 
-    input[texCoor.x + 128] = val_1;
+    input[texCoor.x + 64 * 1] = val_1;
 
     synchronize();
 
+
+    input[texCoor.x + 64 * 2] = val_2;
+
+    synchronize();
+
+
+    input[texCoor.x + 64 * 3] = val_3;
+
+    synchronize();
+    */
+
+    for (int i = 0; i < 4; i++) {
+
+        vec2 val_1 = vec2(texelFetch(screen, ivec2(texCoor.x + 64 * i, texCoor.y), 0).x, 0.0);
+
+        input[texCoor.x + 64 * i] = val_1;
+
+        synchronize();
+
+    }
 }
 
 //-------------------------------------------------------------------------LOAD PIXELS FROM BUFFER TO INPUT
@@ -120,17 +144,41 @@ void loadPixs_buffer_to_input()
 
     ivec2 texCoor = ivec2(gl_GlobalInvocationID.xy);
 
-
+    /*
 
     input[texCoor.x] = real_imag_buffer[texCoor.x];
 
 
     synchronize();
 
-    input[texCoor.x + 128] = real_imag_buffer[texCoor.x + 128];
+    input[texCoor.x + 64 * 1] = real_imag_buffer[texCoor.x + 64 * 1];
 
 
     synchronize();
+
+
+    input[texCoor.x + 64 * 2] = real_imag_buffer[texCoor.x + 64 * 2];
+
+
+    synchronize();
+
+    input[texCoor.x + 64 * 3] = real_imag_buffer[texCoor.x + 64 * 3];
+
+
+    synchronize();
+
+    */
+
+    for (int i = 0; i < 4; i++)
+    {
+
+        input[texCoor.x + 64 * i] = real_imag_buffer[texCoor.x + 64 * i];
+
+        synchronize();
+
+    }
+
+
 }
 
 //-------------------------------------------------------------------------LOAD PIXELS FROM BUFFER TO INPUT
@@ -140,28 +188,50 @@ void loadPixs_input_to_buffer()
 
     ivec2 texCoor = ivec2(gl_GlobalInvocationID.xy);
 
-
+    /*
 
     real_imag_buffer[texCoor.x] = input[texCoor.x];
 
 
     synchronize();
 
-    real_imag_buffer[texCoor.x + 128] = input[texCoor.x + 128];
+    real_imag_buffer[texCoor.x + 64* 1] = input[texCoor.x + 64 * 1];
 
 
     synchronize();
+
+    real_imag_buffer[texCoor.x + 64 * 2] = input[texCoor.x + 64 * 2];
+
+
+    synchronize();
+
+    real_imag_buffer[texCoor.x + 64 * 3] = input[texCoor.x + 64 * 3];
+
+
+    synchronize();
+    */
+
+    for (int i = 0; i < 4; i++)
+    {
+
+        real_imag_buffer[texCoor.x + 64 * i] = input[texCoor.x + 64 * i];
+
+        synchronize();
+
+    }
+
 }
 
 //-------------------------------------------------------------------------PERMUTATE
-void permutate1(){
+void permutate(){
     
     uint num = 1;
     uint bits = 0;
 
     //this is repetative calculation !! later set the num of bytes as uniform or somoething
 
-    while(num < 256 ){
+    while(num < gl_WorkGroupSize.x * 4)
+    {
         
         num <<= 1;
         bits++;
@@ -171,15 +241,41 @@ void permutate1(){
 
     uint t_id = texCoor.x;
 
-    real_imag_buffer[t_id] = input[rev(t_id, bits)];
+     /*
+        real_imag_buffer[t_id] = input[rev(t_id, bits)];
 
-    synchronize();
+        synchronize();
 
-    uint pair = t_id + 128;
 
-    real_imag_buffer[pair] = input[rev(pair, bits)];
+        real_imag_buffer[pair] = input[rev(pair, bits)];
 
-    synchronize();
+        synchronize();
+
+
+        pair = t_id + 64 * 2;
+
+        real_imag_buffer[pair] = input[rev(pair, bits)];
+
+        synchronize();
+
+        pair = t_id + 64 * 3;
+
+        real_imag_buffer[pair] = input[rev(pair, bits)];
+
+        synchronize();
+        */
+    for (int i = 0; i < 4; i++)
+    {
+
+        uint pair = t_id + 64 * i;
+
+        real_imag_buffer[pair] = input[rev(pair, bits)];
+
+        synchronize();
+
+    }
+
+
 
 }
 
@@ -204,12 +300,14 @@ void fft(){
         vec4 v = vec4(0.0);
         vec4 v_1 = vec4(0.0);
 
-        float angle = 2.0 * M_PI * float((t_id) % (k / 2)) / float(k);
+        for (int b = 0; b < 2; b++) {
+
+            float angle = 2.0 * M_PI * float((t_id * 2 + b) % (k / 2)) / float(k);
 
             vec2 twiddle = vec2(cos(angle), -sin(angle));
 
-            uint block = t_id / (k / 2);
-            uint offset = t_id % (k / 2);
+            uint block = (t_id * 2 + b) / (k / 2);
+            uint offset = (t_id * 2  + b) % (k / 2);
 
             uint e = block * k + offset;
             uint o = e + (k / 2);
@@ -243,6 +341,8 @@ void fft(){
 
             synchronize();
 
+        }
+
 
         k *= 2;
         synchronize();
@@ -270,7 +370,7 @@ void main()
 
     loadPixs_from_img();
 
-    permutate1();
+    permutate();
     loadPixs_buffer_to_input();
     fft();
     //  loadPixs_input_to_buffer();
@@ -280,18 +380,40 @@ void main()
 
     ivec2 texC_g = ivec2(gl_GlobalInvocationID.xy);
 
+    /*
+
     vec2 v_0 = vec2(input[texC_g.x].x, input[texC_g.x].y);
 
-    vec2 v_1 = vec2(input[texC_g.x + 128].x, input[texC_g.x + 128].y);
+    vec2 v_1 = vec2(input[texC_g.x + 64 * 1].x, input[texC_g.x + 64 * 1].y);
+
+    vec2 v_2 = vec2(input[texC_g.x + 64 * 2].x, input[texC_g.x + 64 * 2].y);
+
+    vec2 v_3 = vec2(input[texC_g.x + 64 * 3].x, input[texC_g.x + 64 * 3].y);
+
+
+
+
 
     vec4 v_0_0 = vec4(v_0.x, v_0.y, 0.0, 0.0);
     vec4 v_1_1 = vec4(v_1.x, v_1.y, 0.0, 0.0);
+    vec4 v_2_2 = vec4(v_2.x, v_2.y, 0.0, 0.0);
+    vec4 v_3_3 = vec4(v_3.x, v_3.y, 0.0, 0.0);
+
 
     imageStore(fft_data, texC_g, v_0_0);
-    imageStore(fft_data, ivec2(texC_g.x + 128, texC_g.y), v_1_1);
+    imageStore(fft_data, ivec2(texC_g.x + 64 * 1, texC_g.y), v_1_1);
+    imageStore(fft_data, ivec2(texC_g.x + 64 * 2, texC_g.y), v_2_2);
+    imageStore(fft_data, ivec2(texC_g.x + 64 * 3, texC_g.y), v_3_3);
 
+    */
+    for (int i = 0; i < 4; i++)
+    {
 
+        vec2 v = vec2(input[texC_g.x + 64 * i].x, input[texC_g.x + 64 * i].y);
+        vec4 v_out = vec4(v.x, v.y, 0.0, 0.0);
+        imageStore(fft_data, ivec2(texC_g.x + 64 * i, texC_g.y), v_out);
 
+    }
 
 
     //vec2 fft_res = input[gl_LocalInvocationIndex];

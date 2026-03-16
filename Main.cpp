@@ -488,7 +488,7 @@ int main() {
 		}
 		glUniform1i(loc_num_waves, add_waves);
 
-		add_waves = (add_waves <= 256) ? add_waves += 1 : 256;
+		add_waves = (add_waves <= 128) ? add_waves += 1 : 128;
 	
 	}
 	

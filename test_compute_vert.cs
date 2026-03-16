@@ -130,8 +130,7 @@ void loadPixs_buffer_to_input()
 
 //-------------------------------------------------------------------------LOAD PIXELS FROM BUFFER TO INPUT
 
-void loadPixs_input_to_buffer()
-{
+void loadPixs_input_to_buffer(){
 
     ivec2 texCoor = ivec2(gl_GlobalInvocationID.xy);
 
@@ -153,28 +152,25 @@ void loadPixs_input_to_buffer()
 //-------------------------------------------------------------------------PERMUTATE
 
 
-void permutate1()
-{
+void permutate(){
 
     uint num = 1;
     uint bits = 0;
 
     //this is repetative calculation !! later set the num of bytes as uniform or somoething
 
-    while (num < 256)
-    {
+    while (num < gl_WorkGroupSize.y * 2){
 
         num <<= 1;
         bits++;
 
     }
-    ivec2 texCoor = ivec2(gl_GlobalInvocationID.xy);
 
-    uint t_id = texCoor.y;
+    uint t_id = gl_LocalInvocationIndex;
 
     real_imag_buffer[t_id] = input[rev(t_id, bits)];
 
-    synchronize();
+  //  synchronize();
 
     uint pair = t_id + 128;
 
@@ -191,11 +187,11 @@ void permutate1()
 
 void fft(){
 
-    ivec2 texC_g = ivec2(gl_GlobalInvocationID.xy);
+  
 
 
     uint k = 2;
-    uint num_lvls = uint(log2(256));
+    uint num_lvls = uint(log2(gl_WorkGroupSize.y * 2));
 
     for(uint lvl = 0; lvl < num_lvls; lvl++){
 
@@ -261,7 +257,7 @@ void main()
 
     loadPixs_from_img();
 
-    permutate1();
+    permutate();
     loadPixs_buffer_to_input();
     fft();
     // loadPixs_input_to_buffer();
