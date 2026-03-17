@@ -13,11 +13,17 @@
 
 using namespace std;
 
+
+
 class Shader {
 
 public:
+
 	unsigned int ID;
-	Shader(const char* vertexShader, const char* fragmendShader);
+
+	Shader(const char* vertex_shader, const char* fragment_shader);
+	Shader(string compute_shader_file);
+	Shader() = delete;
 
 	void Use();
 

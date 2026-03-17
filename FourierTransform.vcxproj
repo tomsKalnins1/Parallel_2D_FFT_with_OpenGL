@@ -153,6 +153,7 @@
     <ClCompile Include="glad.c" />
     <None Include="Main-3.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Shader_source.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="stb.cpp" />
     <ClCompile Include="stb_write.cpp" />
@@ -163,7 +164,8 @@
   <ItemGroup>
     <ClInclude Include="fft_2D_images.h" />
     <ClInclude Include="EBO.h" />
-    <ClInclude Include="Shader.h" />
+    <ClInclude Include="Shader_source.h" />
+    <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="VAO.h" />

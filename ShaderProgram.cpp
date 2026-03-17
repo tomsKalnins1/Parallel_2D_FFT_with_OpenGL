@@ -1,4 +1,4 @@
-#include "Shader.h"
+#include "ShaderProgram.h"
 
 string getFileContent(const char* path) {
 
@@ -7,10 +7,11 @@ string getFileContent(const char* path) {
 	if (in) {
 	
 		string content;
-
+	
 		in.seekg(0, ios::end);
 
 		content.resize(in.tellg());
+
 
 		in.seekg(0, ios::beg);
 

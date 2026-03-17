@@ -13,12 +13,12 @@
 #include <cmath>
 #include <math.h>
 
+#include "ShaderProgram.h"
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <cerrno>
 
-#include "Shader.h"
 #include "VAO.h"
 #include "VBO.h"
 #include "Texture.h"
@@ -108,6 +108,7 @@ int main() {
 	Shader sh(v.c_str(), f.c_str());
 
 	Shader shF(frame_b_vert.c_str(), frabe_b_frag.c_str());
+
 
 	//-----------------COMPUTE SHADER
 
