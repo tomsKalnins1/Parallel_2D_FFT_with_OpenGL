@@ -14,17 +14,33 @@
 
 using std::string;
 
+enum fft_orientation {
+
+	HORIZONTAL,
+	VERTICEL
+
+};
+
 
 class shader_source {
 	public:
+
+
+
+		static fft_orientation orientation;
+public:
 		unsigned int ID;
 		shader_source() = delete;
 		shader_source(const shader_source&) = delete;
 		shader_source operator=(const shader_source&) = delete;
 
 		shader_source(string file_path, GLenum shader_type);
+		shader_source(string file_path, GLenum shader_type, fft_orientation orientation, int num_samples, int samples_per_processor);
 
-		string getFileContent(const char* path);
+		static string get_file_content(const char* path);
+
+		static string set_compute_shader_values(string source, int num_samples, int samples_per_processor, fft_orientation orientation);
+
 
 };
 

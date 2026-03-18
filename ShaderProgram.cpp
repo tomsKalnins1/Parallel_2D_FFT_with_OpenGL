@@ -1,4 +1,7 @@
+#include "Shader_source.h"
 #include "ShaderProgram.h"
+
+
 
 string getFileContent(const char* path) {
 
@@ -31,24 +34,13 @@ string getFileContent(const char* path) {
 
 Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 
-//	cout << "NAME OF THE FILES  = " << pathToVert << " ,  " << pathToFrag << endl;
-
-	string vertexShader	= getFileContent(pathToVert);
 	string fragmentShader = getFileContent(pathToFrag);
 
-	//cout << pathToVert << "\n" << vertexShader << endl;
-	//cout << pathToFrag << "\n" << fragmentShader << endl;
+	shader_source vert(pathToVert, GL_VERTEX_SHADER);
 
-	const char* vertexShaderSource = vertexShader.c_str();
+
+
 	const char* fragmentShaderSource = fragmentShader.c_str();
-
-	//!!!!!!! TURNS OUT NVIDIA HAS SOME SORT OF A BUG WHERE THE DRIVER IS LIKELY COMPILING THE SHADERS
-	//! WITHOUT ME COMPILING THEM EXPLICITLY (https://stackoverflow.com/questions/24171290/is-glcompileshader-optional)
-	//! But in order fo my program to run for other platforms I need to leave those lines in!!!
-
-	unsigned int vertID = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertID, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertID);
 
 	unsigned int fragID = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragID, 1, &fragmentShaderSource, NULL);
@@ -56,7 +48,7 @@ Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 
 	ID = glCreateProgram();
 
-	glAttachShader(ID, vertID);
+	glAttachShader(ID, vert.ID);
 	glAttachShader(ID, fragID);
 
 	glLinkProgram(ID);
@@ -72,7 +64,7 @@ Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 
 
 
-	glDeleteShader(vertID);
+	glDeleteShader(vert.ID);
 	glDeleteShader(fragID);
 
 }

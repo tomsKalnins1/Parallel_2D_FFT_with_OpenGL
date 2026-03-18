@@ -114,6 +114,7 @@ int main() {
 
 	string comp_file = "test_compute_horiz.cs";
 
+	shader_source compute_h("fft_compute_horizontal.cs", GL_COMPUTE_SHADER, HORIZONTAL, 256, 4);
 
 	string comp_shader_text = getFileContent(comp_file.c_str());
 	const char* comp_shader_source = comp_shader_text.c_str();
@@ -124,7 +125,7 @@ int main() {
 	glCompileShader(comp_shader_id);
 
 	GLuint comp_sh_program_id = glCreateProgram();
-	glAttachShader(comp_sh_program_id, comp_shader_id);
+	glAttachShader(comp_sh_program_id, compute_h.ID);
 	glLinkProgram(comp_sh_program_id);
 
 	GLint linkSuccess = 0;

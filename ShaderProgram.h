@@ -1,6 +1,7 @@
 #ifndef SHADER_PROGRAM_H
 #define SHADER_PROGRAM_H
 
+
 #include <glad/glad.h>
 #include <iostream>
 #include <string>
@@ -10,9 +11,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "Shader_source.h"
+
 
 using namespace std;
-
 
 
 class Shader {
