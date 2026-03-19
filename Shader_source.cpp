@@ -15,7 +15,7 @@ shader_source::shader_source(string file_path, GLenum shader_type) {
 	if (!compiled) {
 		char errorLog[1024];
 		glGetShaderInfoLog(ID, 1024, NULL, errorLog);
-		std::cout << ("SHADER " + file_path + " \n COMPILATION FAILED : \n") << errorLog << '\n';
+		std::cout << ("RENDER PIPELINE SHADER " + file_path + " \n COMPILATION FAILED : \n") << errorLog << '\n';
 	}
 
 
@@ -49,6 +49,7 @@ string shader_source::get_file_content(const char* file_path) {
 	std::ifstream in(file_path, std::ios::binary);
 
 	if (in) {
+		
 
 		string content;
 
@@ -81,17 +82,19 @@ string shader_source::set_compute_shader_values(string shader_source_file, int n
 		invocation_orient = "Y_INVOCATIONS";
 	}
 
+	
+
 	int index = shader_source_file.find(invocation_orient);
 
 	shader_source_file = shader_source_file.replace(index, invocation_orient.size(), std::to_string(num_samples / samples_per_processor));
 
-	index = shader_source_file.find(samples);
+	while (shader_source_file.find(samples) < shader_source_file.size()) {
 
-	shader_source_file = shader_source_file.replace(index, samples.size(), std::to_string(num_samples));
+		index = shader_source_file.find(samples);
 
-	index = shader_source_file.find(samples);
+		shader_source_file = shader_source_file.replace(index, samples.size(), std::to_string(num_samples));
 
-	shader_source_file = shader_source_file.replace(index, samples.size(), std::to_string(num_samples));
+	}
 
 	return shader_source_file;
 

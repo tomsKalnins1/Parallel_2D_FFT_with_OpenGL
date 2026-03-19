@@ -6,14 +6,14 @@ layout(rgba32f, binding = 1) uniform image2D output_1;
 
 #define M_PI 3.1415926535897932384626433832795
 
-uniform int num_samples_v;
+
 
 shared vec2 input[NUM_SAMPLES];
 shared vec2 real_imag_buffer[NUM_SAMPLES];
 
 
 
-
+int num_samples_v = NUM_SAMPLES ;
 
 
 //-------------------------------------------------------------------------COMPLEX ADD_1

@@ -10,12 +10,12 @@ layout(rgba32f, binding = 2) uniform image2D fft_data;
 
 #define M_PI 3.1415926535897932384626433832795
 
-uniform int num_samples_h;
+
 
 shared vec2 input[NUM_SAMPLES];
 shared vec2 real_imag_buffer[NUM_SAMPLES];
 
-
+int num_samples_h = NUM_SAMPLES ;
 
 
 

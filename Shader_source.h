@@ -17,7 +17,7 @@ using std::string;
 enum fft_orientation {
 
 	HORIZONTAL,
-	VERTICEL
+	VERTICAL
 
 };
 

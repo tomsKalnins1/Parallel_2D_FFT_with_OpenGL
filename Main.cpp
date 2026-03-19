@@ -112,45 +112,14 @@ int main() {
 
 	//-----------------COMPUTE SHADER
 
-	string comp_file = "test_compute_horiz.cs";
-
-	shader_source compute_h("fft_compute_horizontal.cs", GL_COMPUTE_SHADER, HORIZONTAL, 256, 4);
-
-	string comp_shader_text = getFileContent(comp_file.c_str());
-	const char* comp_shader_source = comp_shader_text.c_str();
-
-	GLuint comp_shader_id = glCreateShader(GL_COMPUTE_SHADER);
-	
-	glShaderSource(comp_shader_id, 1, &comp_shader_source, NULL);
-	glCompileShader(comp_shader_id);
-
-	GLuint comp_sh_program_id = glCreateProgram();
-	glAttachShader(comp_sh_program_id, compute_h.ID);
-	glLinkProgram(comp_sh_program_id);
-
-	GLint linkSuccess = 0;
-	glGetProgramiv(comp_sh_program_id, GL_LINK_STATUS, &linkSuccess);
-	if (linkSuccess == GL_FALSE) {
-		char infoLog[1024];
-		glGetProgramInfoLog(comp_sh_program_id, 1024, NULL, infoLog);
-		std::cout << "COMPUTE SAHDER PROGRAM LINK FAILED:\n" << infoLog << std::endl;
-	}
-
-	GLint success;
-	glGetShaderiv(comp_shader_id, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		char infoLog[1024];
-		glGetShaderInfoLog(comp_shader_id, 1024, NULL, infoLog);
-		std::cout << "COMPUTE SHADER COMPILATION FAILED:\n" << infoLog << std::endl;
-	}
-
-	string comp_frag = "comp_frag.fs";
-	Shader comp(v.c_str(), comp_frag.c_str());
-	comp.Use();
-	Shader::setUniform(comp.ID, "screen", (unsigned int)0);
 
 
 
+	Shader compute_prog_h("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
+
+
+	//-----------------COMPUTE SHADER
+	//-----------------TEXTURING
 	unsigned int texture;
 
 	float* image_fft;
@@ -166,10 +135,6 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, image_fft);
-
-//------------------------------------Bind the source texture befor even the output texture is bound, but it can also be done
-									//  at render loop, but most importantly has to be bound to the RIGHT texture unit before comp shader dispatch
-									//  at render loop, but most importantly has to be bound to the RIGHT texture unit before comp shader dispatch
 
 
 	//----------------------------------------------Texture  rg32f after horizontal fft
@@ -190,18 +155,9 @@ int main() {
 
 
 
+	
+	compute_prog_h.Use();
 
-	//glActiveTexture(GL_TEXTURE2);
-	//glBindTexture(GL_TEXTURE_2D, first_fft);
-
-
-	unsigned int comp_sh_tex_loc;
-
-
-	glUseProgram(comp_sh_program_id);
-
-	unsigned int n_samples = glGetUniformLocation(comp_sh_program_id, "num_samples_h");
-	glUniform1i(n_samples, 256);
 
 	//glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	glDispatchCompute((unsigned int)ceil(256 / 256), (unsigned int)ceil(256 / 1), 1);
@@ -210,60 +166,17 @@ int main() {
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 	//-------------------------------------------------------COMPUTE SHADER NR 2
-	string comp_file_2 = "test_compute_vert.cs";
 
 
-	string comp_shader_text_2 = getFileContent(comp_file_2.c_str());
-	const char* comp_shader_source_2 = comp_shader_text_2.c_str();
+	Shader compute_prog_v("fft_compute_vertical.cs", VERTICAL, 256, 4);
 
-	GLuint comp_shader_id_2 = glCreateShader(GL_COMPUTE_SHADER);
-
-	glShaderSource(comp_shader_id_2, 1, &comp_shader_source_2, NULL);
-	glCompileShader(comp_shader_id_2);
-
-	GLuint comp_sh_program_id_2 = glCreateProgram();
-	glAttachShader(comp_sh_program_id_2, comp_shader_id_2);
-	glLinkProgram(comp_sh_program_id_2);
-
-	GLint linkSuccess_2 = 0;
-	glGetProgramiv(comp_sh_program_id_2, GL_LINK_STATUS, &linkSuccess_2);
-	if (linkSuccess_2 == GL_FALSE) {
-		char infoLog_2[1024];
-		glGetProgramInfoLog(comp_sh_program_id_2, 1024, NULL, infoLog_2);
-		std::cout << "COMPUTE  2  SAHDER PROGRAM LINK FAILED:\n" << infoLog_2 << std::endl;
-	}
-
-	GLint success_2;
-	glGetShaderiv(comp_shader_id_2, GL_COMPILE_STATUS, &success_2);
-	if (!success_2) {
-		char infoLog_3[1024];
-		glGetShaderInfoLog(comp_shader_id_2, 1024, NULL, infoLog_3);
-		std::cout << "COMPUTE  2  SHADER COMPILATION FAILED:\n" << infoLog_3 << std::endl;
-	}
 
 
 	unsigned int second_fft;//image2D after 1st permutation
 
 
 
-	
 
-
-
-
-
-	/*
-	glGenTextures(1, &second_fft);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, second_fft);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
-	*/
-
-	 //FIRST ARG SPECIFIES THE BINDING BASEN ON WHICH COMP SHADER KNOWS WHICH IMAGE TEXTURE TO SAMPLE FROM
 	unsigned int output_1;//image2D after 1st permutation
 
 	glGenTextures(1, &output_1);
@@ -276,10 +189,9 @@ int main() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
 
 
-	glUseProgram(comp_sh_program_id_2);
+	compute_prog_v.Use();
 
-	unsigned int n_samples_2 = glGetUniformLocation(comp_sh_program_id_2, "num_samples_v");
-	glUniform1i(n_samples_2, 256);
+
 
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, first_fft);
@@ -288,7 +200,7 @@ int main() {
 
 	glBindImageTexture(1, output_1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
-//	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
 
 	glDispatchCompute((unsigned int)ceil(256 / 1), (unsigned int)ceil(256 / 256), 1);
 
@@ -309,87 +221,6 @@ int main() {
 	vao.Unbind();
 	vbo.Unbind();
 
-//	Texture tex("image.png", false);
-
-
-	
-	/*
-
-	fft2D fft(256.0f, 256.0f);
-	
-	vector<complex<float>> fftInputRow;
-	
-	cout << "SIZE OF IMAGE INPUT ROW = " << fftInputRow.size() << '\n';
-	unsigned char* image_fft;
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\camera_man.png";
-	int fftHeight, fftWidth, fftNumChannels;
-	image_fft = stbi_load(pathToImage.c_str(), &fftWidth, &fftHeight, &fftNumChannels, 0);
-	cout << "NUM COLOR CHANNELS  =  " << fftNumChannels << " WIDTH = " << fftWidth << " HEIGHT = " << fftHeight << '\n';
-
-	
-	vector<vector<complex<float>>> imageData_rows;
-
-	int x1 = 0;
-	int y1 = 0;
-
-
-	int sizeImg = fftHeight;
-	
-	for (int y = 0; y < sizeImg; y++) {
-	
-		vector<complex<float>> one_row;
-
-		for (int x = 0; x < sizeImg; x ++) {
-		
-			complex<float> c_img((float)image_fft[y1]/255.0f, 0.0f);
-			
-			y1 += 3;//INCORRECT STRIDE MIGHT BE PROBLEM 1#
-			
-			one_row.push_back(c_img);
-
-		}
-
-		imageData_rows.push_back(one_row);
-
-	}
-
-
-	
-	vector<vector<complex<float>>> image_2D_freq_sprectrum = fft.fft_2D(imageData_rows);
-
-	float* data_texture = new float[256 * 256 * 2];
-
-
-	int index = 0;
-
-	int size_fft_output = image_2D_freq_sprectrum.size();
-
-	for (int x = 0; x < size_fft_output; x++) {
-	
-		for (int y = 0;y < size_fft_output; y++) {
-		
-
-			*(data_texture + index) = image_2D_freq_sprectrum[x][y].real();
-
-			*(data_texture + index + 1) = image_2D_freq_sprectrum[x][y].imag();
-
-			index += 2;
-		}
-	
-	}
-	
-
-	unsigned int fft_output_texture;
-	glGenTextures(1, &fft_output_texture);
-
-
-	glBindTexture(GL_TEXTURE_2D, fft_output_texture);
-	//glPixelStorei(GL_UNPACK_ALIGNMENT, 3);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, 256, 256, 0, GL_RG, GL_FLOAT, data_texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	*/
 
 
 	

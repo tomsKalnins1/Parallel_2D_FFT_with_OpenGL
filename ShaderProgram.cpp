@@ -37,19 +37,13 @@ Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 	string fragmentShader = getFileContent(pathToFrag);
 
 	shader_source vert(pathToVert, GL_VERTEX_SHADER);
+	shader_source frag(pathToFrag, GL_FRAGMENT_SHADER);
 
-
-
-	const char* fragmentShaderSource = fragmentShader.c_str();
-
-	unsigned int fragID = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragID, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragID);
 
 	ID = glCreateProgram();
 
 	glAttachShader(ID, vert.ID);
-	glAttachShader(ID, fragID);
+	glAttachShader(ID, frag.ID);
 
 	glLinkProgram(ID);
 	//! mistake always add linking error checking (wrote one letter in uppercase where it should haev been lowercase
@@ -59,20 +53,41 @@ Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 	if (linkSuccess == GL_FALSE) {
 		char infoLog[1024];
 		glGetProgramInfoLog(ID, 1024, NULL, infoLog);
-		std::cout << "Framebuffer shader PROGRAM LINK FAILED:\n" << infoLog << std::endl;
+		std::cout << "PROGRAM LINK FAILED:\n" << infoLog << std::endl;
 	}
 
-
-
 	glDeleteShader(vert.ID);
-	glDeleteShader(fragID);
+	glDeleteShader(frag.ID);
+
+}
+
+Shader::Shader(const char* compute_shader, fft_orientation orientation, int num_samples, int samples_per_processor) {
+
+	shader_source comp(compute_shader, GL_COMPUTE_SHADER, orientation, num_samples, samples_per_processor);
+
+
+
+	ID = glCreateProgram();
+
+	glAttachShader(ID, comp.ID);
+
+
+	glLinkProgram(ID);
+
+	GLint linkSuccess = 0;
+	glGetProgramiv(ID, GL_LINK_STATUS, &linkSuccess);
+	if (linkSuccess == GL_FALSE) {
+		char infoLog[1024];
+		glGetProgramInfoLog(ID, 1024, NULL, infoLog);
+		std::cout << "PROGRAM LINK FAILED:\n" << infoLog << std::endl;
+	}
+
+	glDeleteShader(comp.ID);
 
 }
 
 void Shader::Use() {
-	//cout << "shaderID = " << ID << endl;
 	glUseProgram(ID);
-
 }
 
 void Shader::Delete() {
