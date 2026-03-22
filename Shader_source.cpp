@@ -87,6 +87,8 @@ string shader_source::set_compute_shader_values(string shader_source_file, int n
 	int index = shader_source_file.find(invocation_orient);
 
 	shader_source_file = shader_source_file.replace(index, invocation_orient.size(), std::to_string(num_samples / samples_per_processor));
+	
+	std::cout << "NUM INVOCATIONS = " << (num_samples / samples_per_processor) << '\n';
 
 	while (shader_source_file.find(samples) < shader_source_file.size()) {
 

@@ -40,33 +40,41 @@ float delta_time = 0;
 void saveImg(string path) {
 
 	GLsizei nrChannels = 3;
-	GLsizei stride = nrChannels * 256;
+	GLsizei stride = nrChannels * 512;
 	stride += (stride % 4) ? (4 - stride % 4) : 0; //make sure the stride is a multiple of 4
-	GLsizei bufferSize = stride * 256;
+	GLsizei bufferSize = stride * 512;
 	vector<char> buffer(bufferSize);
 	glPixelStorei(GL_PACK_ALIGNMENT, 4);
 	glReadBuffer(GL_FRONT);
-	glReadPixels(0, 0, 256, 256, GL_RGB, GL_UNSIGNED_BYTE, buffer.data());
+	glReadPixels(0, 0, 512, 512, GL_RGB, GL_UNSIGNED_BYTE, buffer.data());
 //	cout << "SIZE OF THE IMAGE VECTOR (FOR SAVED IMAGE) = " << buffer.size() << '\n';
 	stbi_flip_vertically_on_write(true);
-	stbi_write_png(path.c_str(), 256, 256, 3, buffer.data(), stride);
+	stbi_write_png(path.c_str(), 512, 512, 3, buffer.data(), stride);
 
 }
 
 bool save = true;
+
+struct Data {
+
+	unsigned int bits;
+	int forward;
+	float norm;
+
+};
 
 int main() {
 
 
 	glfwInit();
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	
 
-	GLFWwindow* window = glfwCreateWindow(256, 256, "Framebuffer", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(512, 512, "Framebuffer", NULL, NULL);
 
 	if (window == NULL) {
 
@@ -92,8 +100,8 @@ int main() {
 	glfwMakeContextCurrent(window);
 //	glfwSetCursorPosCallback(window, mousePositionCallBack);
 //	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	gladLoadGL();
+	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+	//gladLoadGL();
 
 	string v = "vert.vs";
 	string f = "frag.fs";
@@ -101,7 +109,7 @@ int main() {
 	string frame_b_vert = "vertFrameBuffer.vs";
 	string frabe_b_frag = "fragFrameBuffer.fs";
 	
-	glViewport(0, 0, 256, 256);
+	glViewport(0, 0, 512, 512);
 
 	cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
@@ -110,105 +118,109 @@ int main() {
 	Shader shF(frame_b_vert.c_str(), frabe_b_frag.c_str());
 
 
-	//-----------------COMPUTE SHADER
 
+	//----------------------------------------------------------------------------COMPUTE SHADER STUFF
 
-
-
-	Shader compute_prog_h("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
-
-
-	//-----------------COMPUTE SHADER
-	//-----------------TEXTURING
-	unsigned int texture;
+	Shader compute_prog_h("fft_compute_horizontal.cs", HORIZONTAL, 512, 4);
 
 	float* image_fft;
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\camera_man.png";
-	int fftHeight, fftWidth, fftNumChannels;
-	image_fft = stbi_loadf(pathToImage.c_str(), &fftWidth, &fftHeight, &fftNumChannels, 0);
+	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\camera_man_larger_3.png";
 
-	glGenTextures(1, &texture);
-	//glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 256, 256, 0, GL_RGB, GL_FLOAT, image_fft);
+	cout << "GL__TEXTURE1 = " << GL_TEXTURE2 << '\n';
 
+	Texture texture(GL_RGBA32F, GL_RGBA, pathToImage, 512, 512);
+	
+	Texture first_fft(GL_RGBA32F, GL_RGBA, "no_file", 512, 512);
 
-	//----------------------------------------------Texture  rg32f after horizontal fft
+	Texture output_1(GL_RGBA32F, GL_RGBA, "no_file", 512, 512);
 
-	unsigned int first_fft;//image2D after 1st permutation
+	texture.Bind();
 
-	glGenTextures(1, &first_fft);
-	/*Texure has an ID and it can be bound to a certain texture unit,apparently when binding it and to */
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, first_fft);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
+	texture.bind_image_2D(0);
 
-	glBindImageTexture(2, first_fft, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F); //FIRST ARG SPECIFIES THE BINDING BASEN ON WHICH COMP SHADER KNOWS WHICH IMAGE TEXTURE TO SAMPLE FROM
+	Texture::activate_tex_unit(1);
 
+	
+	first_fft.Bind();
 
+	first_fft.bind_image_2D(1);
 
+	unsigned int bits = Shader::num_bits((unsigned int)texture.height);
+	Data d = { bits, -1, 1.0f };
+
+	unsigned int buffer_comp_h;
+	glCreateBuffers(1, &buffer_comp_h);
+	glNamedBufferStorage(buffer_comp_h, sizeof(Data), &d, GL_DYNAMIC_STORAGE_BIT);	
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_h);
 	
 	compute_prog_h.Use();
 
+	float time_0 = glfwGetTime();
 
-	//glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-	glDispatchCompute((unsigned int)ceil(256 / 256), (unsigned int)ceil(256 / 1), 1);
+	glDispatchCompute((unsigned int)ceil(512 / 512), (unsigned int)ceil(512 / 1), 1);
 
+	Shader compute_prog_v("fft_compute_vertical.cs", VERTICAL, 512, 4);
 
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	first_fft.bind_image_2D(0);
 
-	//-------------------------------------------------------COMPUTE SHADER NR 2
+	output_1.bind_image_2D(1);
 
-
-	Shader compute_prog_v("fft_compute_vertical.cs", VERTICAL, 256, 4);
-
-
-
-	unsigned int second_fft;//image2D after 1st permutation
-
-
-
-
-	unsigned int output_1;//image2D after 1st permutation
-
-	glGenTextures(1, &output_1);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, output_1);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
-
+	unsigned int buffer_comp_v;
+	glCreateBuffers(1, &buffer_comp_v);
+	glNamedBufferStorage(buffer_comp_v, sizeof(Data), &d, GL_DYNAMIC_STORAGE_BIT);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_v);
 
 	compute_prog_v.Use();
 
+	glDispatchCompute((unsigned int)ceil(512 / 1), (unsigned int)ceil(512 / 512), 1);
+
+	float time_1 = glfwGetTime();
+
+	cout << "TIME TOOK TO PEFORM FOURIER TRANSFORM = " << (time_1 - time_0) << '\n';
+
+//----------------------------------------------------------------------------COMPUTE SHADER STUFF
+
+//-----------------------------------------------------------------------------
+//---------------------------------------DO INVERSE 2D FFT WITH COMPUTE SHADERS 
+
+	Texture inter(GL_RGBA32F, GL_RGBA, "no_file", 512, 512);
+	Texture output_2(GL_RGBA32F, GL_RGBA, "no_file", 512, 512);
+
+	Texture::activate_tex_unit(0);
+	output_1.Bind();
+	output_1.bind_image_2D(0);
+
+	Texture::activate_tex_unit(1);
+	inter.Bind();
+	inter.bind_image_2D(1);
+
+	Data d_inv = { bits, 1 , 512.0f * 512.0f };
+	Data d_inv_inter = { bits, 1, 1.0f };
 
 
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, first_fft);
+	unsigned int buffer_comp_h_i;
+	glCreateBuffers(1, &buffer_comp_h_i);
+	glNamedBufferStorage(buffer_comp_h_i, sizeof(Data), &d_inv_inter, GL_DYNAMIC_STORAGE_BIT);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_h_i);
 
-	glBindImageTexture(0, first_fft, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	compute_prog_h.Use();
+	glDispatchCompute((unsigned int)ceil(512 / 512), (unsigned int)ceil(512 / 1), 1);
 
-	glBindImageTexture(1, output_1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	Texture::activate_tex_unit(2);
+	inter.Bind();
+	inter.bind_image_2D(0);
 
+	Texture::activate_tex_unit(2);
+	output_2.Bind();
+	output_2.bind_image_2D(1);
 
+	unsigned int buffer_comp_v_i;
+	glCreateBuffers(1, &buffer_comp_v_i);
+	glNamedBufferStorage(buffer_comp_v_i, sizeof(Data), &d_inv, GL_DYNAMIC_STORAGE_BIT);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_v_i);
 
-	glDispatchCompute((unsigned int)ceil(256 / 1), (unsigned int)ceil(256 / 256), 1);
-
-
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-
-	//-----------------COMPUTE SHADER
+	compute_prog_v.Use();
+	glDispatchCompute((unsigned int)ceil(512 / 1), (unsigned int)ceil(512 / 512), 1);
 
 	VAO vao;
 
@@ -227,7 +239,12 @@ int main() {
 	int add_waves = 0;
 	unsigned int loc_num_waves = glGetUniformLocation(sh.ID, "wave_lim");
 
+	int add_waves_1 = 0;
+	unsigned int loc_num_waves_1 = glGetUniformLocation(sh.ID, "wave_lim_1");
 	
+	unsigned int loc_N = glGetUniformLocation(sh.ID, "N");
+
+	glUniform1f(loc_N, 512.0f);
 
 
 	
@@ -247,26 +264,14 @@ int main() {
 	
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		/*
-		comp.Use();
 
-		unsigned int tex_loc_cs;
-		tex_loc_cs = glGetUniformLocation(comp.ID, "screen");
-		glUniform1i(tex_loc_cs, 3);//mistake before due to forgettig to set this to 1 which was 0 that was set earlier
-//		Shader::setUniform(sh.ID, "screen", (unsigned int)0);
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, output_1);
-
-		*/
-		
 		
 		
 		sh.Use();
 		
 		glActiveTexture(GL_TEXTURE3);
-		//glBindTexture(GL_TEXTURE_2D, texture);
-		glBindTexture(GL_TEXTURE_2D, output_1);
-		//glBindTexture(GL_TEXTURE_2D, first_fft);
+
+		output_2.Bind();
 
 		int location_tex = glGetUniformLocation(sh.ID, "real_imag");
 		glUniform1i(location_tex, 3);
@@ -284,28 +289,31 @@ int main() {
 
 		if (save) {
 
-				saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\COMP_SHADER_TEST_8.png");
+				//saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\COMP_SHADER_TEST_8.png");
 				//save = false;
 		}
 		
 		
 
 		glfwSwapBuffers(window);
-
 		
+		/*
 		float curr_time = glfwGetTime();
 		delta_time += curr_time - last_time;
 		last_time = curr_time;
 	//	cout << "DELTA TIME = " << delta_time;
-		if (delta_time > 0.1f && add_waves <= 256) {
+		if (delta_time > 0.1f && add_waves <= 512) {
 			delta_time = 0;
 			add_waves+=1;
 
 		//	cout << add_waves;
 		}
-		glUniform1i(loc_num_waves, add_waves);
+		*/
+//		glUniform1i(loc_num_waves, 512);
+//		glUniform1i(loc_num_waves_1, 512);
+		glUniform1f(loc_N, 512.0f);
+		glUniform1i(loc_num_waves, 512);
 
-		add_waves = (add_waves <= 128) ? add_waves += 1 : 128;
 	
 	}
 	

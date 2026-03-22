@@ -20,17 +20,21 @@ public:
 	float* image;
 	string filename;
 
-	Texture(string fileName, GLenum internal_format, GLenum format, int w, int h);
+	Texture() = delete;
+	Texture operator=(const Texture&) = delete;
+	Texture(const Texture&) = delete;
+
+	Texture(GLenum internal_format, GLenum format, string file_name = "no_file", int width = 256, int height = 256);
 
 	void Bind();
 
-	void BindUnit(int num_image_unit);
+	void bind_image_2D(int layout);
 
 	void Unbind();
 
 	void Delete();
 
-	void ActivateTexUnit(int i);
+	static void activate_tex_unit(int i);
 
 };
 

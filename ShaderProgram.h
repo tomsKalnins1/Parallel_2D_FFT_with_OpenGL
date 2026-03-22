@@ -38,7 +38,7 @@ public:
 	static void setUniform(unsigned int shader_id, string uniformName, float value);
 	static void setUniform(unsigned int shader_id, string uniformName,unsigned int value);
 
-	
+	static int num_bits(unsigned int number);
 
 };
 

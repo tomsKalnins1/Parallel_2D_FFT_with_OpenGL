@@ -61,6 +61,7 @@ Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 
 }
 
+
 Shader::Shader(const char* compute_shader, fft_orientation orientation, int num_samples, int samples_per_processor) {
 
 	shader_source comp(compute_shader, GL_COMPUTE_SHADER, orientation, num_samples, samples_per_processor);
@@ -88,6 +89,23 @@ Shader::Shader(const char* compute_shader, fft_orientation orientation, int num_
 
 void Shader::Use() {
 	glUseProgram(ID);
+}
+
+int Shader::num_bits(unsigned int number_samples) {
+
+	unsigned int num = 1;
+	unsigned int bits = 0;
+
+	while (num < number_samples)
+	{
+
+		num <<= 1;
+		bits++;
+
+	}
+
+	return bits;
+
 }
 
 void Shader::Delete() {
