@@ -151,6 +151,7 @@
     <ClCompile Include="fft_2D.cpp" />
     <ClCompile Include="EBO.cpp" />
     <ClCompile Include="glad.c" />
+    <None Include="freq_comp_frag.fs" />
     <None Include="Main-3.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Shader_source.cpp" />
@@ -175,13 +176,13 @@
     <None Include=".gitignore" />
     <None Include="comp_frag.fs" />
     <None Include="frag.fs" />
-    <None Include="fragFrameBuffer.fs" />
+    <None Include="source_img_frag.fs" />
     <None Include="fragMesh.fs" />
     <None Include="test_compute.comp" />
     <None Include="test_compute_horiz.cs" />
     <None Include="test_compute_vert.cs" />
     <None Include="vert.vs" />
-    <None Include="vertFrameBuffer.vs" />
+    <None Include="source_img_vert.vs" />
     <None Include="vertMesh.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

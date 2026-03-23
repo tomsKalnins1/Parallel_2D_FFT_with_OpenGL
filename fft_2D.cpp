@@ -3,7 +3,7 @@
 
 
 
-vector<complex<float>> fft2D::fft_1D(vector<complex<float>> signal) {
+vector<complex<float>> fft2D::fft_1D(vector<complex<float>> signal, int dir) {
 
 	int len = signal.size();
 
@@ -45,15 +45,15 @@ vector<complex<float>> fft2D::fft_1D(vector<complex<float>> signal) {
 		n++;
 	}
 
-	oddTerms = fft_1D(odd);
-	evenTerms = fft_1D(even);
+	oddTerms = fft_1D(odd, dir);
+	evenTerms = fft_1D(even, dir);
 
 
 	vector<complex<float>> components(len);
 	int m = 0;
 	for (int j = 0; j < len/2; j++) {
 
-		complex<float> twiddle = std::complex<float>(cos(M_PI * 2.0f * j / len), (-1) * sin(M_PI * 2.0f  * j/ len));
+		complex<float> twiddle = std::complex<float>(cos(M_PI * 2.0f * j / len), (dir) * sin(M_PI * 2.0f  * j/ len));
 
 
 
@@ -98,7 +98,7 @@ int reverseBits(unsigned int n) {
 	return ans;
 }
 
-vector<complex<float>> ddt_1D_2(vector<complex<float>> signal) {
+vector<complex<float>> fft2D::ddt_1D_2(vector<complex<float>> signal) {
 
 	int len = signal.size();
 
@@ -111,7 +111,7 @@ vector<complex<float>> ddt_1D_2(vector<complex<float>> signal) {
 }
 
 
-vector<vector<complex<float>>> fft2D::fft_2D(vector<vector<complex<float>>> signalRow) {
+vector<vector<complex<float>>> fft2D::fft_2D(vector<vector<complex<float>>> signalRow, int dir) {
 	cout << "2D FFT CALLED !" << endl;
 	int size = signalRow.size();
 	vector<vector<complex<float>>> image_rows_fft(size);
@@ -120,7 +120,7 @@ vector<vector<complex<float>>> fft2D::fft_2D(vector<vector<complex<float>>> sign
 	int r = 0;
 	for (int y = 0; y < size; y++) {
 	//	cout << "beefore fft2d" << endl;
-		vector<complex<float>> one_row = fft_1D(signalRow[y]);
+		vector<complex<float>> one_row = fft_1D(signalRow[y], dir);
 //		cout << "ROW nr. " << y << endl;
 		printMaxMag(one_row);
 
@@ -147,7 +147,7 @@ vector<vector<complex<float>>> fft2D::fft_2D(vector<vector<complex<float>>> sign
 		
 		}
 		
-		image_cols_fft[x] = fft_1D(one_col);
+		image_cols_fft[x] = fft_1D(one_col, dir);
 
 	}
 

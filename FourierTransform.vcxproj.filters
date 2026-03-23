@@ -79,13 +79,13 @@
     <None Include="fragMesh.fs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="vertFrameBuffer.vs">
+    <None Include="source_img_vert.vs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="vertMesh.vs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="fragFrameBuffer.fs">
+    <None Include="source_img_frag.fs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="frag.fs">
@@ -114,6 +114,9 @@
     </None>
     <None Include="Main-3.cpp">
       <Filter>Source Files</Filter>
+    </None>
+    <None Include="freq_comp_frag.fs">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
 </Project>

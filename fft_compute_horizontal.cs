@@ -82,19 +82,23 @@ void loadPixs_from_img() {
 
     ivec2 texCoor = ivec2(gl_GlobalInvocationID.xy);
 
-    float y = 0.0;
+   // float y = 0.0;
 
 
 
 
     for (int i = 0; i < num_samples_h / gl_WorkGroupSize.x ; i++) {
+
+    float x_x = imageLoad(screen, ivec2(texCoor.x + gl_WorkGroupSize.x * i, texCoor.y)).x;
+    float y = 0.0;
         if(forward > 0){
 
             y = imageLoad(screen, ivec2(texCoor.x + gl_WorkGroupSize.x * i, texCoor.y)).y;
-
+           // x_x = 0.0;
         }
 
-        vec2 cmplx_term = vec2(imageLoad(screen, ivec2(texCoor.x + gl_WorkGroupSize.x * i, texCoor.y)).x, y);
+        //vec2 cmplx_term = vec2(imageLoad(screen, ivec2(texCoor.x + gl_WorkGroupSize.x * i, texCoor.y)).x, y);
+          vec2 cmplx_term = vec2(x_x, y);
 
         input_b[texCoor.x + gl_WorkGroupSize.x * i] = cmplx_term;
 

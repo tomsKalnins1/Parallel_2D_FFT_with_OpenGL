@@ -5,12 +5,12 @@ layout (location = 1) in vec2 aTex;
 
 
 out vec2 texCoor;
-
+uniform mat4 move;
 
 
 void main(){
 
-   gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0); 
+   gl_Position = move * vec4(aPos.x, aPos.y, 0.0, 1.0); 
 
    texCoor = vec2(aTex.x, aTex.y);
 

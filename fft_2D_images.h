@@ -34,11 +34,11 @@ public:
 
 	fft2D() {}
 
-	vector<complex<float>> fft_1D(vector<complex<float>> signal);
+	vector<complex<float>> fft_1D(vector<complex<float>> signal, int dir);
 
 	vector<complex<float>> ddt_1D_2(vector<complex<float>> signal);
 
-	vector<vector<complex<float>>> fft_2D(vector<vector<complex<float>>> signalR);
+	vector<vector<complex<float>>> fft_2D(vector<vector<complex<float>>> signalR, int dir);
 
 	static void printMaxMag(vector<vector<complex<float>>> fft_2D_output);
 

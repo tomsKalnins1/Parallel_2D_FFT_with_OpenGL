@@ -13,6 +13,7 @@
 #include <cmath>
 #include <math.h>
 
+
 #include "ShaderProgram.h"
 #include <string>
 #include <fstream>
@@ -29,6 +30,12 @@
 using namespace std;
 
 extern int extr;
+
+float roundf(float var){
+
+	float value = (int)(var * 100 + .5);
+	return (float)value / 100;
+}
 
 extern string getFileContent(const char* path);
 
@@ -74,7 +81,7 @@ int main() {
 
 	
 
-	GLFWwindow* window = glfwCreateWindow(512, 512, "Framebuffer", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1024, 1024, "Parallel 2D FFT", NULL, NULL);
 
 	if (window == NULL) {
 
@@ -87,13 +94,39 @@ int main() {
 	float plane[] = {
 
 		// coords    // texCoords
-		 1.0f, -1.0f,  1.0f, 0.0f,
-		-1.0f, -1.0f,  0.0f, 0.0f,
-		-1.0f,  1.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.0f, 1.0f,
 
-		 1.0f,  1.0f,  1.0f, 1.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
-		-1.0f,  1.0f,  0.0f, 1.0f
+		 0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.0f, 1.0f
+
+	};
+
+	float plane_img[] = {
+
+		// coords    // texCoords
+		 0.5f, -0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.0f, 1.0f,
+
+		 0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.0f, 1.0f
+
+	};
+
+	float plane_parts[] = {
+
+		// coords    // texCoords
+		 0.5f, -0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.0f, 1.0f,
+
+		 0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.0f, 1.0f
 
 	};
 
@@ -106,17 +139,41 @@ int main() {
 	string v = "vert.vs";
 	string f = "frag.fs";
 	
-	string frame_b_vert = "vertFrameBuffer.vs";
-	string frabe_b_frag = "fragFrameBuffer.fs";
+	string source_vert = "source_img_vert.vs";
+	string source_frag = "source_img_frag.fs";
+
+	string parts_frag = "freq_comp_frag.fs";
 	
-	glViewport(0, 0, 512, 512);
+	glViewport(0, 0, 1024, 1024);
 
 	cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
 	Shader sh(v.c_str(), f.c_str());
 
-	Shader shF(frame_b_vert.c_str(), frabe_b_frag.c_str());
+	VAO vao;
+	vao.Bind();
+	VBO vbo(plane, sizeof(plane));
+	vao.linkVBO(vbo, 2, 2);
+	vao.Unbind();
+	vbo.Unbind();
 
+	Shader shF(source_vert.c_str(), source_frag.c_str());
+
+	VAO vao_s;
+	vao_s.Bind();
+	VBO vbo_s(plane_img, sizeof(plane_img));
+	vao_s.linkVBO(vbo_s, 2, 2);
+	vao_s.Unbind();
+	vbo_s.Unbind();
+
+	Shader sh_parts(v.c_str(), parts_frag.c_str());
+
+	VAO vao_p;
+	vao_p.Bind();
+	VBO vbo_p(plane_parts, sizeof(plane_parts));
+	vao_p.linkVBO(vbo_p, 2, 2);
+	vao_p.Unbind();
+	vbo_p.Unbind();
 
 
 	//----------------------------------------------------------------------------COMPUTE SHADER STUFF
@@ -213,7 +270,6 @@ int main() {
 	Texture::activate_tex_unit(2);
 	output_2.Bind();
 	output_2.bind_image_2D(1);
-
 	unsigned int buffer_comp_v_i;
 	glCreateBuffers(1, &buffer_comp_v_i);
 	glNamedBufferStorage(buffer_comp_v_i, sizeof(Data), &d_inv, GL_DYNAMIC_STORAGE_BIT);
@@ -222,30 +278,29 @@ int main() {
 	compute_prog_v.Use();
 	glDispatchCompute((unsigned int)ceil(512 / 1), (unsigned int)ceil(512 / 512), 1);
 
-	VAO vao;
 
-	vao.Bind();
-
-	VBO vbo(plane, sizeof(plane));
-
-	vao.linkVBO(vbo, 2, 2);
-
-	vao.Unbind();
-	vbo.Unbind();
+	glm::mat4 trans = glm::mat4(1.0f);
 
 
 
-	
-	int add_waves = 0;
-	unsigned int loc_num_waves = glGetUniformLocation(sh.ID, "wave_lim");
+
+
+
+
 
 	int add_waves_1 = 0;
 	unsigned int loc_num_waves_1 = glGetUniformLocation(sh.ID, "wave_lim_1");
-	
+
+
+	int add_waves = 0;
+	unsigned int loc_num_waves = glGetUniformLocation(sh.ID, "wave_lim");
 	unsigned int loc_N = glGetUniformLocation(sh.ID, "N");
 
 	glUniform1f(loc_N, 512.0f);
 
+	
+	
+	
 
 	
 
@@ -265,54 +320,101 @@ int main() {
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		
+		unsigned int loc_num_waves = glGetUniformLocation(sh.ID, "wave_lim");
+		unsigned int loc_N = glGetUniformLocation(sh.ID, "N");
 		
 		sh.Use();
 		
-		glActiveTexture(GL_TEXTURE3);
+		glActiveTexture(GL_TEXTURE5);
 
-		output_2.Bind();
+		output_1.Bind();
 
 		int location_tex = glGetUniformLocation(sh.ID, "real_imag");
-		glUniform1i(location_tex, 3);
-		glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
-		
-		
+		glUniform1i(location_tex, 5);
+
+		trans = glm::mat4(1.0f);
+
+		trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
+
+		trans = glm::scale(trans, glm::vec3(0.8f, 0.8f, 0.0f));
+
+		unsigned int loc_move = glGetUniformLocation(sh.ID, "move");
+
+		glUniformMatrix4fv(loc_move, 1, GL_FALSE, glm::value_ptr(trans));
+		Shader::setUniform(sh.ID, "move", trans);
+
+
+		glUniform1f(loc_N, 512.0f);
+		glUniform1i(loc_num_waves, add_waves);
 
 		vao.Bind();
 	
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	
+		shF.Use();
+		glActiveTexture(GL_TEXTURE5);
+		output_2.Bind();
+		trans = glm::mat4(1.0f);
 
+		trans = glm::translate(trans, glm::vec3(0.5f, 0.5f, 0.0f));
+
+		trans = glm::scale(trans, glm::vec3(0.8f, 0.8f, 0.0f));
+
+
+		Shader::setUniform(shF.ID, "move", trans);
+		Shader::setUniform(shF.ID, "filterTexture",(unsigned int) 5);
+
+		vao_s.Bind();
+		
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		sh_parts.Use();
+		glActiveTexture(GL_TEXTURE6);
+		output_1.Bind();
+
+		Shader::setUniform(sh_parts.ID, "real_imag", (unsigned int)6);
+
+		trans = glm::mat4(1.0f);
+
+		trans = glm::translate(trans, glm::vec3(0.0f, -0.5f, 0.0f));
+
+		trans = glm::scale(trans, glm::vec3(0.9f, 0.9f, 0.0f));
+
+		Shader::setUniform(sh_parts.ID, "move", trans);
+
+		loc_num_waves = glGetUniformLocation(sh_parts.ID, "wave_lim");
+		loc_N = glGetUniformLocation(sh_parts.ID, "N");
+		
+		glUniform1f(loc_N, 512.0f);
+		glUniform1i(loc_num_waves, add_waves);
+
+		vao_p.Bind();
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		if (save) {
 
-				//saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\COMP_SHADER_TEST_8.png");
+				//saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\OMIT_IMAG_TEST_FFT_OUTPUT_.png");
 				//save = false;
 		}
 		
-		
-
-		glfwSwapBuffers(window);
-		
-		/*
 		float curr_time = glfwGetTime();
 		delta_time += curr_time - last_time;
 		last_time = curr_time;
-	//	cout << "DELTA TIME = " << delta_time;
-		if (delta_time > 0.1f && add_waves <= 512) {
+		if (delta_time > 0.1f && add_waves <= 256) {
 			delta_time = 0;
-			add_waves+=1;
-
-		//	cout << add_waves;
+			add_waves += 1;
 		}
-		*/
+
+		glfwSwapBuffers(window);
+		
+		
+
+		
 //		glUniform1i(loc_num_waves, 512);
 //		glUniform1i(loc_num_waves_1, 512);
-		glUniform1f(loc_N, 512.0f);
-		glUniform1i(loc_num_waves, 512);
+
 
 	
 	}
