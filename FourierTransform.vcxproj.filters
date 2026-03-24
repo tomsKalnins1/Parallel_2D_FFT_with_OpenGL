@@ -118,5 +118,11 @@
     <None Include="freq_comp_frag.fs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="transpose_CW.cs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="transpose_CCW.cs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

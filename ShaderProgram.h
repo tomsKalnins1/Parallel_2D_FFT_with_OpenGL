@@ -25,6 +25,7 @@ public:
 
 	Shader(const char* vertex_shader, const char* fragment_shader);
 	Shader(const char* compute_shader, fft_orientation orientation, int num_samples, int samples_per_processor);
+	Shader(const char* compute_shader, int num_samples, int samples_per_processor);
 	Shader() = delete;
 
 	void Use();

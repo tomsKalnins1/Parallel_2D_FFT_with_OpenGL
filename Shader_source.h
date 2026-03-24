@@ -40,7 +40,7 @@ public:
 		static string get_file_content(const char* path);
 
 		static string set_compute_shader_values(string source, int num_samples, int samples_per_processor, fft_orientation orientation);
-
+		
 
 };
 

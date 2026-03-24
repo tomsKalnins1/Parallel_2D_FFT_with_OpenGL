@@ -34,8 +34,6 @@ string getFileContent(const char* path) {
 
 Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 
-	string fragmentShader = getFileContent(pathToFrag);
-
 	shader_source vert(pathToVert, GL_VERTEX_SHADER);
 	shader_source frag(pathToFrag, GL_FRAGMENT_SHADER);
 
@@ -58,6 +56,31 @@ Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 
 	glDeleteShader(vert.ID);
 	glDeleteShader(frag.ID);
+
+}
+
+Shader::Shader(const char* path_to_comp, int num_samples, int samples_per_processor) {
+
+	shader_source comp(path_to_comp, GL_COMPUTE_SHADER, HORIZONTAL, num_samples, samples_per_processor);
+
+	ID = glCreateProgram();
+
+	glAttachShader(ID, comp.ID);
+
+
+	glLinkProgram(ID);
+	//! mistake always add linking error checking (wrote one letter in uppercase where it should haev been lowercase
+	//! the linking of program failed silently)
+	GLint linkSuccess = 0;
+	glGetProgramiv(ID, GL_LINK_STATUS, &linkSuccess);
+	if (linkSuccess == GL_FALSE) {
+		char infoLog[1024];
+		glGetProgramInfoLog(ID, 1024, NULL, infoLog);
+		std::cout << "PROGRAM LINK FAILED:\n" << infoLog << std::endl;
+	}
+
+	glDeleteShader(comp.ID);
+
 
 }
 

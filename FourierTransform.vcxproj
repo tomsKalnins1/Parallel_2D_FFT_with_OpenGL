@@ -181,6 +181,8 @@
     <None Include="test_compute.comp" />
     <None Include="test_compute_horiz.cs" />
     <None Include="test_compute_vert.cs" />
+    <None Include="transpose_CCW.cs" />
+    <None Include="transpose_CW.cs" />
     <None Include="vert.vs" />
     <None Include="source_img_vert.vs" />
     <None Include="vertMesh.vs" />

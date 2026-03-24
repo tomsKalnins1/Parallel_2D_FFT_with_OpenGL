@@ -97,7 +97,7 @@ string shader_source::set_compute_shader_values(string shader_source_file, int n
 		shader_source_file = shader_source_file.replace(index, samples.size(), std::to_string(num_samples));
 
 	}
-
+	std::cout << shader_source_file << '\n';
 	return shader_source_file;
 
 }

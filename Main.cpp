@@ -313,7 +313,61 @@ int main() {
 
 	glm::mat4 trans = glm::mat4(1.0f);
 
+	//----------------------------------TRANSPOSE TEST
+	/*
+	unsigned int trans_comp_ID;
+	string path_trans = "transpose_CW.cs";
+	const char* path_trans_t = path_trans.c_str();
+	string shader_source = getFileContent(path_trans_t);
 
+	const char* shader_source_char = shader_source.c_str();
+
+	trans_comp_ID = glCreateShader(GL_COMPUTE_SHADER);
+	glShaderSource(trans_comp_ID, 1, &shader_source_char, NULL);
+	glCompileShader(trans_comp_ID);
+
+	GLint compiled;
+	glGetShaderiv(trans_comp_ID, GL_COMPILE_STATUS, &compiled);
+	if (!compiled) {
+		char errorLog[1024];
+		glGetShaderInfoLog(trans_comp_ID, 1024, NULL, errorLog);
+		std::cout << ("RENDER PIPELINE SHADER transpose.cs \n COMPILATION FAILED : \n") << errorLog << '\n';
+	}
+
+	unsigned int trans_prog_ID = glCreateProgram();
+	glAttachShader(trans_prog_ID, trans_comp_ID);
+	glLinkProgram(trans_prog_ID);
+	GLint linkSuccess = 0;
+	glGetProgramiv(trans_prog_ID, GL_LINK_STATUS, &linkSuccess);
+	if (linkSuccess == GL_FALSE) {
+		char infoLog[1024];
+		glGetProgramInfoLog(trans_prog_ID, 1024, NULL, infoLog);
+		std::cout << "PROGRAM LINK FAILED:\n" << infoLog << std::endl;
+	}
+	
+	glDeleteShader(trans_comp_ID);
+	*/
+	string path_trans_v = "transpose_CCW.cs";
+	
+	Shader rot(path_trans_v.c_str(), VERTICAL, 256, 4);
+
+	Texture transpose_T(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+
+
+	Texture::activate_tex_unit(7);
+	transpose_T.Bind();
+	transpose_T.bind_image_2D(1);
+
+
+	Texture::activate_tex_unit(8);
+	output_2.Bind();
+	output_2.bind_image_2D(0);
+
+
+	//glUseProgram(trans_prog_ID);
+	rot.Use();
+	glDispatchCompute((unsigned int)ceil(256), (unsigned int)ceil(1), 1);
+	//----------------------------------TRANSPOSE TEST
 
 
 
@@ -337,7 +391,7 @@ int main() {
 
 		glfwPollEvents();
 
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClearColor(0.156f, 0.427f, 0.482f, 1.0f);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -388,7 +442,7 @@ int main() {
 		//original image but reassembled by compute shaders
 		shF.Use();
 		glActiveTexture(GL_TEXTURE5);
-		output_2.Bind();
+		transpose_T.Bind();
 		trans = glm::mat4(1.0f);
 
 		trans = glm::translate(trans, glm::vec3(0.5f, 0.5f, 0.0f));

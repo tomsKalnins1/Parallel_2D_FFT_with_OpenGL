@@ -195,6 +195,8 @@ void permutate(){
 
 
 
+
+
 void fft(){
 
 
