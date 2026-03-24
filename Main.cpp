@@ -130,6 +130,19 @@ int main() {
 
 	};
 
+	float fft_texture_output[] = {
+
+		// coords    // texCoords
+		 0.5f, -0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.0f, 1.0f,
+
+		 0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.0f, 1.0f
+
+	};
+
 	glfwMakeContextCurrent(window);
 //	glfwSetCursorPosCallback(window, mousePositionCallBack);
 //	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -148,6 +161,8 @@ int main() {
 
 	cout << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 
+	//---------------------------------------------------------------------------------DISPLAY ANIAMTED IMAGE ASSEMBLEY
+
 	Shader sh(v.c_str(), f.c_str());
 
 	VAO vao;
@@ -156,6 +171,8 @@ int main() {
 	vao.linkVBO(vbo, 2, 2);
 	vao.Unbind();
 	vbo.Unbind();
+
+	//---------------------------------------------------------------------------------DISPLAY ORIGINAL IMAGE
 
 	Shader shF(source_vert.c_str(), source_frag.c_str());
 
@@ -166,6 +183,8 @@ int main() {
 	vao_s.Unbind();
 	vbo_s.Unbind();
 
+	//---------------------------------------------------------------------------------DISPLAY INDIVIDUAL FREQUENCIES
+
 	Shader sh_parts(v.c_str(), parts_frag.c_str());
 
 	VAO vao_p;
@@ -175,21 +194,32 @@ int main() {
 	vao_p.Unbind();
 	vbo_p.Unbind();
 
+	//---------------------------------------------------------------------------------DISPLAY THE FFT OUTPUT
+
+	VAO vao_out;
+	vao_out.Bind();
+	VBO vbo_out(fft_texture_output, sizeof(fft_texture_output));
+	vao_out.linkVBO(vbo_out, 2, 2);
+	vao_out.Unbind();
+	vbo_out.Unbind();
+
+
+
 
 	//----------------------------------------------------------------------------COMPUTE SHADER STUFF
 
-	Shader compute_prog_h("fft_compute_horizontal.cs", HORIZONTAL, 512, 4);
+	Shader compute_prog_h("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
 
 	float* image_fft;
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\camera_man_larger_3.png";
+	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\camera_man.png";
 
 	cout << "GL__TEXTURE1 = " << GL_TEXTURE2 << '\n';
 
-	Texture texture(GL_RGBA32F, GL_RGBA, pathToImage, 512, 512);
+	Texture texture(GL_RGBA32F, GL_RGBA, pathToImage, 256, 256);
 	
-	Texture first_fft(GL_RGBA32F, GL_RGBA, "no_file", 512, 512);
+	Texture first_fft(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
-	Texture output_1(GL_RGBA32F, GL_RGBA, "no_file", 512, 512);
+	Texture output_1(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
 	texture.Bind();
 
@@ -214,9 +244,9 @@ int main() {
 
 	float time_0 = glfwGetTime();
 
-	glDispatchCompute((unsigned int)ceil(512 / 512), (unsigned int)ceil(512 / 1), 1);
+	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
 
-	Shader compute_prog_v("fft_compute_vertical.cs", VERTICAL, 512, 4);
+	Shader compute_prog_v("fft_compute_vertical.cs", VERTICAL, 256, 4);
 
 	first_fft.bind_image_2D(0);
 
@@ -229,7 +259,7 @@ int main() {
 
 	compute_prog_v.Use();
 
-	glDispatchCompute((unsigned int)ceil(512 / 1), (unsigned int)ceil(512 / 512), 1);
+	glDispatchCompute((unsigned int)ceil(256 / 1), (unsigned int)ceil(1), 1);
 
 	float time_1 = glfwGetTime();
 
@@ -240,8 +270,10 @@ int main() {
 //-----------------------------------------------------------------------------
 //---------------------------------------DO INVERSE 2D FFT WITH COMPUTE SHADERS 
 
-	Texture inter(GL_RGBA32F, GL_RGBA, "no_file", 512, 512);
-	Texture output_2(GL_RGBA32F, GL_RGBA, "no_file", 512, 512);
+	Texture inter(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+	Texture output_2(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+
+	
 
 	Texture::activate_tex_unit(0);
 	output_1.Bind();
@@ -251,7 +283,7 @@ int main() {
 	inter.Bind();
 	inter.bind_image_2D(1);
 
-	Data d_inv = { bits, 1 , 512.0f * 512.0f };
+	Data d_inv = { bits, 1 , 256.0f * 256.0f };
 	Data d_inv_inter = { bits, 1, 1.0f };
 
 
@@ -261,7 +293,7 @@ int main() {
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_h_i);
 
 	compute_prog_h.Use();
-	glDispatchCompute((unsigned int)ceil(512 / 512), (unsigned int)ceil(512 / 1), 1);
+	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
 
 	Texture::activate_tex_unit(2);
 	inter.Bind();
@@ -276,7 +308,7 @@ int main() {
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_v_i);
 
 	compute_prog_v.Use();
-	glDispatchCompute((unsigned int)ceil(512 / 1), (unsigned int)ceil(512 / 512), 1);
+	glDispatchCompute((unsigned int)ceil(256 / 1), (unsigned int)ceil(1), 1);
 
 
 	glm::mat4 trans = glm::mat4(1.0f);
@@ -288,15 +320,12 @@ int main() {
 
 
 
-	int add_waves_1 = 0;
-	unsigned int loc_num_waves_1 = glGetUniformLocation(sh.ID, "wave_lim_1");
+	//int add_waves_1 = 0;
+
 
 
 	int add_waves = 0;
-	unsigned int loc_num_waves = glGetUniformLocation(sh.ID, "wave_lim");
-	unsigned int loc_N = glGetUniformLocation(sh.ID, "N");
-
-	glUniform1f(loc_N, 512.0f);
+	int add_waves_1 = 0;
 
 	
 	
@@ -308,7 +337,7 @@ int main() {
 
 		glfwPollEvents();
 
-		glClearColor(0.9f, 0.4f, 0.2f, 1.0f);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -319,13 +348,16 @@ int main() {
 	
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		unsigned int loc_num_waves_1 = glGetUniformLocation(sh.ID, "wave_lim_1");
 		unsigned int loc_num_waves = glGetUniformLocation(sh.ID, "wave_lim");
 		unsigned int loc_N = glGetUniformLocation(sh.ID, "N");
+		glUniform1f(loc_N, 256.0f);
 		
 		sh.Use();
 		
 		glActiveTexture(GL_TEXTURE5);
+
+		//animated image assembley
 
 		output_1.Bind();
 
@@ -344,14 +376,16 @@ int main() {
 		Shader::setUniform(sh.ID, "move", trans);
 
 
-		glUniform1f(loc_N, 512.0f);
+		glUniform1f(loc_N, 256.0f);
 		glUniform1i(loc_num_waves, add_waves);
+		glUniform1i(loc_num_waves_1, add_waves_1);
+
 
 		vao.Bind();
 	
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-
+		//original image but reassembled by compute shaders
 		shF.Use();
 		glActiveTexture(GL_TEXTURE5);
 		output_2.Bind();
@@ -366,7 +400,23 @@ int main() {
 		Shader::setUniform(shF.ID, "filterTexture",(unsigned int) 5);
 
 		vao_s.Bind();
-		
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		//the fft output
+		output_1.Bind();
+
+		trans = glm::mat4(1.0f);
+
+		trans = glm::translate(trans, glm::vec3(0.5f, -0.4f, 0.0f));
+
+		trans = glm::scale(trans, glm::vec3(0.8f, 0.8f, 0.0f));
+
+
+		Shader::setUniform(shF.ID, "move", trans);
+		Shader::setUniform(shF.ID, "filterTexture", (unsigned int)5);
+
+		vao_out.Bind();
+		//individual freq.
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		sh_parts.Use();
@@ -377,17 +427,19 @@ int main() {
 
 		trans = glm::mat4(1.0f);
 
-		trans = glm::translate(trans, glm::vec3(0.0f, -0.5f, 0.0f));
+		trans = glm::translate(trans, glm::vec3(-0.5f, -0.4f, 0.0f));
 
-		trans = glm::scale(trans, glm::vec3(0.9f, 0.9f, 0.0f));
+		trans = glm::scale(trans, glm::vec3(0.8f, 0.8f, 0.0f));
 
 		Shader::setUniform(sh_parts.ID, "move", trans);
 
 		loc_num_waves = glGetUniformLocation(sh_parts.ID, "wave_lim");
+		loc_num_waves_1 = glGetUniformLocation(sh_parts.ID, "wave_lim_1");
 		loc_N = glGetUniformLocation(sh_parts.ID, "N");
 		
-		glUniform1f(loc_N, 512.0f);
+		glUniform1f(loc_N, 256.0f);
 		glUniform1i(loc_num_waves, add_waves);
+		glUniform1i(loc_num_waves_1, add_waves_1);
 
 		vao_p.Bind();
 
@@ -402,10 +454,22 @@ int main() {
 		float curr_time = glfwGetTime();
 		delta_time += curr_time - last_time;
 		last_time = curr_time;
-		if (delta_time > 0.1f && add_waves <= 256) {
+		if (delta_time > 0.0f && add_waves_1 <= 128 && add_waves != 128) {
 			delta_time = 0;
-			add_waves += 1;
+			add_waves_1++;
+			if (add_waves_1 >= 128) {
+				add_waves++;
+				add_waves_1 = 0;
+			}
+
+			
 		}
+
+		if (add_waves == 128) {
+			add_waves_1 = 128;
+		}
+
+		cout << "wave_lim X = " << add_waves << " wave_lim_1 =" << add_waves_1 <<  '\n';
 
 		glfwSwapBuffers(window);
 		

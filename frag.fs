@@ -49,7 +49,7 @@ void main(){
 
 	for(int x = 0; x < wave_lim; x++){
 	
-		for(int y  = 0; y < wave_lim; y++){
+		for(int y  = 0; y < wave_lim_1; y++){
 		//vec2 freq = texture(real_imag, TexCoor).rg;
 		vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
 
@@ -70,7 +70,7 @@ void main(){
 	
 	for(int x = N_i/2; x < N_i/2 + wave_lim; x++){
 	
-	for(int y  = 0; y < wave_lim; y++){
+	for(int y  = 0; y < wave_lim_1; y++){
 		//vec2 freq = texture(real_imag, TexCoor).rg;
 		vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
 
@@ -89,7 +89,7 @@ void main(){
 
 		for(int x = 0; x < wave_lim; x++){
 	
-	for(int y  = N_i/2 ; y < N_i/2 + wave_lim; y++){
+	for(int y  = N_i/2 ; y < N_i/2 + wave_lim_1; y++){
 		//vec2 freq = texture(real_imag, TexCoor).rg;
 		vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
 
@@ -108,7 +108,7 @@ void main(){
 
 			for(int x = N_i/2; x <N_i/2 + wave_lim; x++){
 	
-	for(int y  = N_i/2 ; y < N_i/2 + wave_lim; y++){
+	for(int y  = N_i/2 ; y < N_i/2 + wave_lim_1; y++){
 		//vec2 freq = texture(real_imag, TexCoor).rg;
 		vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
 
@@ -127,7 +127,7 @@ void main(){
 	
 
 
-	float normalize = 1.0 / ( float(wave_lim) * 2.0 * N);
+	float normalize = 1.0 / ( N * N);
 
 	waveSum *= normalize;
 
