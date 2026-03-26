@@ -1,28 +1,26 @@
 #version 460 core
 
-
-
-
 layout(local_size_x = X_INVOCATIONS, local_size_y = 1, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D screen;
 layout(rgba32f, binding = 1) uniform image2D fft_data;
+layout(rgba32f, binding = 2) uniform image2D transposed;
 
-layout(std430, binding = 2) buffer Data{
+layout(std430, binding = 3) buffer Data{
 
     uint num_bits;
     int forward;
+    int vertical;
     float norm;
 
 };
 
 #define M_PI 3.14159265358979323846212833832795
 
-
-
-
-
 shared vec2 input_b[NUM_SAMPLES];
 shared vec2 real_imag_buffer[NUM_SAMPLES];
+
+shared vec4 transpose_a[NUM_SAMPLES];
+shared vec4 transpose_b[NUM_SAMPLES];
 
 int num_samples_h = NUM_SAMPLES ;
 
@@ -68,8 +66,6 @@ uint rev(uint n, uint num_bits){
 }
 
 
-
-
 //-------------------------------------------------------------------------SYNCHRONIZE DATA ACCESS
  void synchronize(){
     
@@ -92,6 +88,12 @@ void loadPixs_from_img() {
     float x_x = imageLoad(screen, ivec2(texCoor.x + gl_WorkGroupSize.x * i, texCoor.y)).x;
     float y = 0.0;
         if(forward > 0){
+
+            y = imageLoad(screen, ivec2(texCoor.x + gl_WorkGroupSize.x * i, texCoor.y)).y;
+           // x_x = 0.0;
+        }
+
+        if(vertical == 1){
 
             y = imageLoad(screen, ivec2(texCoor.x + gl_WorkGroupSize.x * i, texCoor.y)).y;
            // x_x = 0.0;
@@ -261,6 +263,8 @@ void fft(){
 void main()
 {
 
+    ivec2 texC_g = ivec2(gl_GlobalInvocationID.xy);
+
     loadPixs_from_img();
 
     permutate();
@@ -268,18 +272,21 @@ void main()
     fft();
 
 
+    for (int i = 0; i < num_samples_h / gl_WorkGroupSize.x; i++){
 
+        vec2 v = vec2(input_b[texC_g.x + gl_WorkGroupSize.x * i].x, input_b[texC_g.x + gl_WorkGroupSize.x * i].y);
 
-
-    ivec2 texC_g = ivec2(gl_GlobalInvocationID.xy);
-
-    for (int i = 0; i < num_samples_h / gl_WorkGroupSize.x; i++)
-    {
-
-        vec2 v = vec2(input_b[texC_g.x + gl_WorkGroupSize.x * i].x, input_b[texC_g.x + gl_WorkGroupSize.x * i].y);        
         vec4 v_out = vec4(v.x, v.y, 0.0, 0.0);
+        if(norm > 1.0){
+            v_out = vec4(v.x, v.x, v.x, 0.0);
+
+        }
         imageStore(fft_data, ivec2(texC_g.x + gl_WorkGroupSize.x * i, texC_g.y), v_out/norm);
 
     }
+
+
+
+
 
 }

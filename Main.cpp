@@ -66,6 +66,7 @@ struct Data {
 
 	unsigned int bits;
 	int forward;
+	int vertical;
 	float norm;
 
 };
@@ -219,173 +220,217 @@ int main() {
 	
 	Texture first_fft(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
+	Texture transp_FFT_1(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+
+	Texture second_fft(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+	
 	Texture output_1(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
-	texture.Bind();
 
+	Texture::activate_tex_unit(0);
+	texture.Bind();
 	texture.bind_image_2D(0);
 
 	Texture::activate_tex_unit(1);
-
-	
 	first_fft.Bind();
-
 	first_fft.bind_image_2D(1);
 
+	Texture::activate_tex_unit(2);
+	transp_FFT_1.Bind();
+	transp_FFT_1.bind_image_2D(2);
+
 	unsigned int bits = Shader::num_bits((unsigned int)texture.height);
-	Data d = { bits, -1, 1.0f };
+	Data d = { bits, -1, 0, 1.0f };
+	Data d_vert = { bits, -1, 1, 1.0f };
 
 	unsigned int buffer_comp_h;
 	glCreateBuffers(1, &buffer_comp_h);
 	glNamedBufferStorage(buffer_comp_h, sizeof(Data), &d, GL_DYNAMIC_STORAGE_BIT);	
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_h);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, buffer_comp_h);
 	
+	
+
 	compute_prog_h.Use();
 
 	float time_0 = glfwGetTime();
 
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
 
-	Shader compute_prog_v("fft_compute_vertical.cs", VERTICAL, 256, 4);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-	first_fft.bind_image_2D(0);
+	string path_trans_v = "transpose_CW.cs";
 
-	output_1.bind_image_2D(1);
-
-	unsigned int buffer_comp_v;
-	glCreateBuffers(1, &buffer_comp_v);
-	glNamedBufferStorage(buffer_comp_v, sizeof(Data), &d, GL_DYNAMIC_STORAGE_BIT);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_v);
-
-	compute_prog_v.Use();
-
-	glDispatchCompute((unsigned int)ceil(256 / 1), (unsigned int)ceil(1), 1);
-
-	float time_1 = glfwGetTime();
-
-	cout << "TIME TOOK TO PEFORM FOURIER TRANSFORM = " << (time_1 - time_0) << '\n';
-
-//----------------------------------------------------------------------------COMPUTE SHADER STUFF
-
-//-----------------------------------------------------------------------------
-//---------------------------------------DO INVERSE 2D FFT WITH COMPUTE SHADERS 
-
-	Texture inter(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
-	Texture output_2(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
-
-	
-
-	Texture::activate_tex_unit(0);
-	output_1.Bind();
-	output_1.bind_image_2D(0);
-
-	Texture::activate_tex_unit(1);
-	inter.Bind();
-	inter.bind_image_2D(1);
-
-	Data d_inv = { bits, 1 , 256.0f * 256.0f };
-	Data d_inv_inter = { bits, 1, 1.0f };
-
-
-	unsigned int buffer_comp_h_i;
-	glCreateBuffers(1, &buffer_comp_h_i);
-	glNamedBufferStorage(buffer_comp_h_i, sizeof(Data), &d_inv_inter, GL_DYNAMIC_STORAGE_BIT);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_h_i);
-
-	compute_prog_h.Use();
-	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
-
-	Texture::activate_tex_unit(2);
-	inter.Bind();
-	inter.bind_image_2D(0);
-
-	Texture::activate_tex_unit(2);
-	output_2.Bind();
-	output_2.bind_image_2D(1);
-	unsigned int buffer_comp_v_i;
-	glCreateBuffers(1, &buffer_comp_v_i);
-	glNamedBufferStorage(buffer_comp_v_i, sizeof(Data), &d_inv, GL_DYNAMIC_STORAGE_BIT);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_v_i);
-
-	compute_prog_v.Use();
-	glDispatchCompute((unsigned int)ceil(256 / 1), (unsigned int)ceil(1), 1);
-
-
-	glm::mat4 trans = glm::mat4(1.0f);
-
-	//----------------------------------TRANSPOSE TEST
-	/*
-	unsigned int trans_comp_ID;
-	string path_trans = "transpose_CW.cs";
-	const char* path_trans_t = path_trans.c_str();
-	string shader_source = getFileContent(path_trans_t);
-
-	const char* shader_source_char = shader_source.c_str();
-
-	trans_comp_ID = glCreateShader(GL_COMPUTE_SHADER);
-	glShaderSource(trans_comp_ID, 1, &shader_source_char, NULL);
-	glCompileShader(trans_comp_ID);
-
-	GLint compiled;
-	glGetShaderiv(trans_comp_ID, GL_COMPILE_STATUS, &compiled);
-	if (!compiled) {
-		char errorLog[1024];
-		glGetShaderInfoLog(trans_comp_ID, 1024, NULL, errorLog);
-		std::cout << ("RENDER PIPELINE SHADER transpose.cs \n COMPILATION FAILED : \n") << errorLog << '\n';
-	}
-
-	unsigned int trans_prog_ID = glCreateProgram();
-	glAttachShader(trans_prog_ID, trans_comp_ID);
-	glLinkProgram(trans_prog_ID);
-	GLint linkSuccess = 0;
-	glGetProgramiv(trans_prog_ID, GL_LINK_STATUS, &linkSuccess);
-	if (linkSuccess == GL_FALSE) {
-		char infoLog[1024];
-		glGetProgramInfoLog(trans_prog_ID, 1024, NULL, infoLog);
-		std::cout << "PROGRAM LINK FAILED:\n" << infoLog << std::endl;
-	}
-	
-	glDeleteShader(trans_comp_ID);
-	*/
-	string path_trans_v = "transpose_CCW.cs";
-	
-	Shader rot(path_trans_v.c_str(), VERTICAL, 256, 4);
+	Shader rot(path_trans_v.c_str(), HORIZONTAL, 256, 4);
 
 	Texture transpose_T(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
 
 	Texture::activate_tex_unit(7);
-	transpose_T.Bind();
-	transpose_T.bind_image_2D(1);
+	first_fft.Bind();
+	first_fft.bind_image_2D(0);
 
 
 	Texture::activate_tex_unit(8);
-	output_2.Bind();
-	output_2.bind_image_2D(0);
+	transp_FFT_1.Bind();
+	transp_FFT_1.bind_image_2D(1);
 
 
-	//glUseProgram(trans_prog_ID);
 	rot.Use();
-	glDispatchCompute((unsigned int)ceil(256), (unsigned int)ceil(1), 1);
-	//----------------------------------TRANSPOSE TEST
+	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256), 1);
+
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	Shader compute_prog_h_2("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
+
+	Texture::activate_tex_unit(0);
+	transp_FFT_1.Bind();
+	transp_FFT_1.bind_image_2D(0);
+
+	Texture::activate_tex_unit(1);
+	second_fft.Bind();
+	second_fft.bind_image_2D(1);
+
+	Texture::activate_tex_unit(2);
+	output_1.Bind();
+	output_1.bind_image_2D(2);
+
+
+	unsigned int buffer_comp_h_v;
+	glCreateBuffers(1, &buffer_comp_h_v);
+	glNamedBufferStorage(buffer_comp_h_v, sizeof(Data), &d_vert, GL_DYNAMIC_STORAGE_BIT);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, buffer_comp_h_v);
+
+	compute_prog_h_2.Use();
+
+	time_0 = glfwGetTime();
+
+	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
 
 
 
+	Shader rot_2(path_trans_v.c_str(), HORIZONTAL, 256, 4);
+
+	Texture transpose_T_2(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+
+
+	Texture::activate_tex_unit(7);
+	second_fft.Bind();
+	second_fft.bind_image_2D(0);
+
+
+	Texture::activate_tex_unit(8);
+	transpose_T_2.Bind();
+	transpose_T_2.bind_image_2D(1);
+
+
+	rot_2.Use();
+	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256), 1);
+
+
+//----------------------------------------------------------------------------COMPUTE SHADER STUFF
+
+//-----------------------------------------------------------------------------
+//---------------------------------------DO INVERSE 2D FFT WITH COMPUTE SHADERS 
+	Shader compute_prog_h_3("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
+
+	Texture fft_1(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+	Texture fft_1_transp(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+	Texture fft_2(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+	Texture ifft(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+
+	Texture::activate_tex_unit(0);
+	transpose_T_2.Bind();
+	transpose_T_2.bind_image_2D(0);
+
+	Texture::activate_tex_unit(1);
+	fft_1.Bind();
+	fft_1.bind_image_2D(1);
+
+	Data d_ifft = { bits, 1, 1, 1.0f };
+	Data d_ifft_1 = { bits, 1, 1, 255.0f * 255.0f };
+
+	unsigned int buffer_comp_h_3;
+	glCreateBuffers(1, &buffer_comp_h_3);
+	glNamedBufferStorage(buffer_comp_h_3, sizeof(Data), &d_ifft, GL_DYNAMIC_STORAGE_BIT);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, buffer_comp_h_3);
+
+	compute_prog_h_3.Use();
+
+	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
+
+	//------------------------------------------------------TRANSPOSE 3
+
+	Shader rot_3(path_trans_v.c_str(), HORIZONTAL, 256, 4);
+
+	Texture transpose_T_3(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+
+
+	Texture::activate_tex_unit(7);
+	fft_1.Bind();
+	fft_1.bind_image_2D(0);
+
+
+	Texture::activate_tex_unit(8);
+	transpose_T_3.Bind();
+	transpose_T_3.bind_image_2D(1);
+
+
+	rot_3.Use();
+	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256), 1);
+
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	//-------------------------------------------------------------IFFT COLUMNS
+	Shader compute_prog_h_4("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
+
+	Texture ifft_out(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
 
 
-	//int add_waves_1 = 0;
+	Texture::activate_tex_unit(0);
+	transpose_T_3.Bind();
+	transpose_T_3.bind_image_2D(0);
+
+	Texture::activate_tex_unit(1);
+	ifft_out.Bind();
+	ifft_out.bind_image_2D(1);
+
+	unsigned int buffer_comp_h_4;
+	glCreateBuffers(1, &buffer_comp_h_4);
+	glNamedBufferStorage(buffer_comp_h_4, sizeof(Data), &d_ifft_1, GL_DYNAMIC_STORAGE_BIT);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, buffer_comp_h_4);
+
+	compute_prog_h_3.Use();
+
+	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
+
+	//------------------------------------------------------TRANSPOSE 3
+
+	Shader rot_4(path_trans_v.c_str(), HORIZONTAL, 256, 4);
+
+	Texture transpose_T_4(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
 
+	Texture::activate_tex_unit(7);
+	ifft_out.Bind();
+	ifft_out.bind_image_2D(0);
+
+
+	Texture::activate_tex_unit(8);
+	transpose_T_4.Bind();
+	transpose_T_4.bind_image_2D(1);
+
+
+	rot_4.Use();
+	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256), 1);
+
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	//------------------------------------------------------TRANSPOSE 3
+
+	glm::mat4 trans = glm::mat4(1.0f);
 
 	int add_waves = 0;
 	int add_waves_1 = 0;
-
-	
-	
-	
-
-	
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -413,7 +458,7 @@ int main() {
 
 		//animated image assembley
 
-		output_1.Bind();
+		transpose_T_2.Bind();
 
 		int location_tex = glGetUniformLocation(sh.ID, "real_imag");
 		glUniform1i(location_tex, 5);
@@ -442,7 +487,7 @@ int main() {
 		//original image but reassembled by compute shaders
 		shF.Use();
 		glActiveTexture(GL_TEXTURE5);
-		transpose_T.Bind();
+		transpose_T_4.Bind();
 		trans = glm::mat4(1.0f);
 
 		trans = glm::translate(trans, glm::vec3(0.5f, 0.5f, 0.0f));
@@ -456,8 +501,10 @@ int main() {
 		vao_s.Bind();
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
 		//the fft output
-		output_1.Bind();
+		glActiveTexture(GL_TEXTURE6);
+		second_fft.Bind();
 
 		trans = glm::mat4(1.0f);
 
@@ -467,17 +514,17 @@ int main() {
 
 
 		Shader::setUniform(shF.ID, "move", trans);
-		Shader::setUniform(shF.ID, "filterTexture", (unsigned int)5);
+		Shader::setUniform(shF.ID, "filterTexture", (unsigned int)6);
 
 		vao_out.Bind();
 		//individual freq.
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		sh_parts.Use();
-		glActiveTexture(GL_TEXTURE6);
+		glActiveTexture(GL_TEXTURE7);
 		output_1.Bind();
 
-		Shader::setUniform(sh_parts.ID, "real_imag", (unsigned int)6);
+		Shader::setUniform(sh_parts.ID, "real_imag", (unsigned int)7);
 
 		trans = glm::mat4(1.0f);
 
