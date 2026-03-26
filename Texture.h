@@ -20,11 +20,15 @@ public:
 	float* image;
 	string filename;
 
-	Texture() = delete;
+	static void reset_to_base(Texture&);
+	Texture& operator=(Texture&&);
+	Texture(Texture&&);
 	Texture operator=(const Texture&) = delete;
 	Texture(const Texture&) = delete;
 
-	Texture(GLenum internal_format, GLenum format, string file_name = "no_file", int width = 256, int height = 256);
+	
+
+	Texture(GLenum internal_format = GL_RGBA32F, GLenum format = GL_RGBA, string file_name = "no_file", int width = 256, int height = 256);
 
 	void Bind();
 

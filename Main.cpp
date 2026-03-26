@@ -206,8 +206,7 @@ int main() {
 
 
 
-
-	//----------------------------------------------------------------------------COMPUTE SHADER STUFF
+	//---------------------------------------------------------------------------------FFT COMP 1/4
 
 	Shader compute_prog_h("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
 
@@ -226,18 +225,19 @@ int main() {
 	
 	Texture output_1(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
+//	Texture img = std::move(texture);
 
 	Texture::activate_tex_unit(0);
 	texture.Bind();
 	texture.bind_image_2D(0);
 
+	
+
 	Texture::activate_tex_unit(1);
 	first_fft.Bind();
 	first_fft.bind_image_2D(1);
 
-	Texture::activate_tex_unit(2);
-	transp_FFT_1.Bind();
-	transp_FFT_1.bind_image_2D(2);
+
 
 	unsigned int bits = Shader::num_bits((unsigned int)texture.height);
 	Data d = { bits, -1, 0, 1.0f };
@@ -257,7 +257,7 @@ int main() {
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
 
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
+	//---------------------------------------------------------------------------------TRANSOSE 1/4
 	string path_trans_v = "transpose_CW.cs";
 
 	Shader rot(path_trans_v.c_str(), HORIZONTAL, 256, 4);
@@ -269,22 +269,36 @@ int main() {
 	first_fft.Bind();
 	first_fft.bind_image_2D(0);
 
+	Texture::reset_to_base(texture);
+
 
 	Texture::activate_tex_unit(8);
-	transp_FFT_1.Bind();
-	transp_FFT_1.bind_image_2D(1);
+	texture.Bind();
+	texture.bind_image_2D(1);
 
 
 	rot.Use();
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256), 1);
 
+
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	//---------------------------------------------------------------------------------FFT COMP 2/4
 
 	Shader compute_prog_h_2("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
 
 	Texture::activate_tex_unit(0);
-	transp_FFT_1.Bind();
-	transp_FFT_1.bind_image_2D(0);
+	texture.Bind();
+	texture.bind_image_2D(0);
+
+
+	Texture text = Texture{GL_RGBA32F, GL_RGBA, pathToImage, 256, 256};
+
+	cout <<"IMAGE POINTER  reset to base =  " << text.image << '\n';
+	Texture::reset_to_base(text);
+	//text = Texture{};
+
+	//cout << "IMAGE POINTER reset to base = " << text.image << '\n';
 
 	Texture::activate_tex_unit(1);
 	second_fft.Bind();
@@ -306,9 +320,7 @@ int main() {
 
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
 
-
-
-	Shader rot_2(path_trans_v.c_str(), HORIZONTAL, 256, 4);
+	//---------------------------------------------------------------------------------TRANSOSE 2/4
 
 	Texture transpose_T_2(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
@@ -323,13 +335,10 @@ int main() {
 	transpose_T_2.bind_image_2D(1);
 
 
-	rot_2.Use();
+	rot.Use();
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256), 1);
 
-
-//----------------------------------------------------------------------------COMPUTE SHADER STUFF
-
-//-----------------------------------------------------------------------------
+	//--------------------------------------------------------------------------------- INVERSE FFT COMP 1/2
 //---------------------------------------DO INVERSE 2D FFT WITH COMPUTE SHADERS 
 	Shader compute_prog_h_3("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
 
@@ -358,9 +367,7 @@ int main() {
 
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
 
-	//------------------------------------------------------TRANSPOSE 3
-
-	Shader rot_3(path_trans_v.c_str(), HORIZONTAL, 256, 4);
+	//---------------------------------------------------------------------------------TRANSOSE 1/2
 
 	Texture transpose_T_3(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
@@ -375,11 +382,11 @@ int main() {
 	transpose_T_3.bind_image_2D(1);
 
 
-	rot_3.Use();
+	rot.Use();
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256), 1);
 
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-	//-------------------------------------------------------------IFFT COLUMNS
+	//--------------------------------------------------------------------------------- INVERSE FFT COMP 2/2 
 	Shader compute_prog_h_4("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
 
 	Texture ifft_out(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
@@ -403,10 +410,7 @@ int main() {
 
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
 
-	//------------------------------------------------------TRANSPOSE 3
-
-	Shader rot_4(path_trans_v.c_str(), HORIZONTAL, 256, 4);
-
+	//--------------------------------------------------------------------------------- TRANSOSE 2/2
 	Texture transpose_T_4(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
 
@@ -420,12 +424,12 @@ int main() {
 	transpose_T_4.bind_image_2D(1);
 
 
-	rot_4.Use();
+	rot.Use();
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256), 1);
 
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-	//------------------------------------------------------TRANSPOSE 3
+	//-----------------------------------------------------------------------------------------------------IFFT COMPLETE
 
 	glm::mat4 trans = glm::mat4(1.0f);
 
