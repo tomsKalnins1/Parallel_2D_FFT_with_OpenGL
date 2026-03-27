@@ -2,7 +2,7 @@
 
 Texture::Texture(GLenum internal_format, GLenum format, string file_name, int w, int h) :internal_color_format{ internal_format },
 color_format{ format }, filename{ file_name }, width{ w }, height{ h } {
-
+	cout << "sonctrucor call" << '\n';
 	glGenTextures(1, &ID);
 
 	glBindTexture(GL_TEXTURE_2D, ID);
@@ -37,16 +37,14 @@ color_format{ format }, filename{ file_name }, width{ w }, height{ h } {
 }
 
 void Texture::reset_to_base(Texture& tex) {
-	cout << "RESET TO BASE FUNCTION " << '\n';
-	tex.Delete();
+
+	glDeleteTextures(1, &tex.ID);
 	tex = Texture{};
-	cout << "RESET TO BASE FUNCTION " << '\n';
 	
 }
 
 Texture& Texture::operator=(Texture&& to_move) {
 	
-	cout << "IMAGE POINTER move constructor  " << to_move.image << '\n';
 	ID = to_move.ID;
 	height = to_move.height;
 	width = to_move.width;
@@ -56,18 +54,15 @@ Texture& Texture::operator=(Texture&& to_move) {
 	image = to_move.image;
 	to_move.image = nullptr;
 
-	cout << "IMAGE POINTER constructor " << to_move.image << '\n';
-
 	filename = to_move.filename;
 	filename = to_move.filename;
 
-	to_move.Delete();
 	return *this;
 
 }
 
 Texture::Texture(Texture&& to_move) {
-	cout << "IMAGE POINTER move constructor" << to_move.image << '\n';
+
 	ID = to_move.ID;
 	height = to_move.height;
 	width = to_move.width;
@@ -75,9 +70,6 @@ Texture::Texture(Texture&& to_move) {
 	color_format = to_move.color_format;
 	internal_color_format = to_move.internal_color_format;
 	image = to_move.image;
-
-
-	cout << "IMAGE POINTER constructor" << to_move.image << '\n';
 	
 	filename = to_move.filename;
 	filename = to_move.filename;

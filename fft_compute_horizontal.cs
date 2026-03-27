@@ -3,9 +3,8 @@
 layout(local_size_x = X_INVOCATIONS, local_size_y = 1, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D screen;
 layout(rgba32f, binding = 1) uniform image2D fft_data;
-layout(rgba32f, binding = 2) uniform image2D transposed;
 
-layout(std430, binding = 3) buffer Data{
+layout(std430, binding = 2) buffer Data{
 
     uint num_bits;
     int forward;

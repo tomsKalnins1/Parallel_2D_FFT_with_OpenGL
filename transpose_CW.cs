@@ -2,7 +2,7 @@
 
 layout(local_size_x = X_INVOCATIONS, local_size_y = 1, local_size_z = 1) in;
 
-layout(rgba32f, binding = 0) uniform image2D image_O; //input_b for vertical fft in this shader
+layout(rgba32f, binding = 0) uniform image2D image_O; 
 layout(rgba32f, binding = 1) uniform image2D image_T;
 
 shared vec4 transpose_a[NUM_SAMPLES] ;
@@ -34,7 +34,7 @@ void main()
         ivec2 store_to = ivec2(texC_g.y, texC_g.x + gl_WorkGroupSize.x * i);
 
         vec4 own_pix = imageLoad(image_O, store_to);
-
+        
         transpose_a[texC_g.x + gl_WorkGroupSize.x * i] = own_pix;
         synchronize();
 
