@@ -29,7 +29,7 @@ public:
 	
 
 	Texture(GLenum internal_format = GL_RGBA32F, GLenum format = GL_RGBA, string file_name = "no_file", int width = 256, int height = 256);
-
+	
 	void bind_texture();
 
 	void bind_image_2D(int layout);

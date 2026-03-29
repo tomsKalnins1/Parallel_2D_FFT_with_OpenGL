@@ -21,7 +21,7 @@
 
 #define THE_PI 3.1415926535897932385
 
-using std::cout, std::string;
+using std::cout, std::string, std::vector;
 
 float last_time = 0;
 float delta_time = 0;
@@ -190,14 +190,14 @@ int main() {
 
 	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\camera_man.png";
 
-	//---------------------------------------------------------------------------------TEST NONPARALLEL FFT TIME
-	
-	std::vector<std::vector<std::complex<float>>> signal(256);
-
-	 
-	//---------------------------------------------------------------------------------TEST NONPARALLEL FFT TIME
-
 	Texture input_img(GL_RGBA32F, GL_RGBA, pathToImage, 256, 256);
+
+	int width, height, numColorChannels;
+	float* image_tst = stbi_loadf(pathToImage.c_str(), &width, &height, &numColorChannels, 0);
+	
+
+	//---------------------------------------------------------------------------------TEST NONPARALLEL FFT TIME
+
 	Texture first_fft = Texture{};
 	Texture second_fft = Texture{};
 	Texture output_1 = Texture{};
@@ -206,6 +206,8 @@ int main() {
 	Texture::activate_tex_unit(0);
 	input_img.bind_texture();
 	input_img.bind_image_2D(0);
+
+
 
 	Texture::activate_tex_unit(1);
 	first_fft.bind_texture();
