@@ -3,7 +3,7 @@
 layout(location = 0)in vec2 aPos;
 layout(location = 1)in vec2 aTexCoor;
 
-out vec2 TexCoor;
+out vec2 tex_coor;
 
 uniform mat4 move;
 
@@ -11,6 +11,6 @@ uniform mat4 move;
 void main(){
 	
 	gl_Position = move  * vec4(aPos.x, aPos.y, 0.0, 1.0);
-	TexCoor = aTexCoor;
+	tex_coor = aTexCoor;
 
 }

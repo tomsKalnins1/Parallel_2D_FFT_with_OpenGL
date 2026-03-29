@@ -27,9 +27,6 @@
     <ClCompile Include="VAO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EBO.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,7 +42,7 @@
     <ClCompile Include="fft_2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Shader_source.cpp">
+    <ClCompile Include="ShaderSource.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -71,7 +68,7 @@
     <ClInclude Include="fft_2D_images.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shader_source.h">
+    <ClInclude Include="ShaderSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -88,7 +85,7 @@
     <None Include="source_img_frag.fs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="frag.fs">
+    <None Include="frag_img_anim_ifft.fs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="vert.vs">
@@ -106,10 +103,7 @@
     <None Include="..\Iterative_fft\Main.cpp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="test_compute_vert.cs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="test_compute_horiz.cs">
+    <None Include="compute_FFT_horiz.cs">
       <Filter>Source Files</Filter>
     </None>
     <None Include="Main-3.cpp">
@@ -119,9 +113,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="transpose_CW.cs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="transpose_CCW.cs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

@@ -5,19 +5,19 @@
 #include <iostream>
 
 
-	extern class VAO {
+	class VAO {
 
 	public:
 		unsigned int ID;
 		VAO();
 
-		void linkVBO(VBO vbo, int numCoords, int numTexCoords);
+		void link_VBO(VBO vbo, int numCoords, int numTexCoords);
 
-		void Bind();
+		void bind_VAO();
 
-		void Unbind();
+		void unbind_VAO();
 
-		void Delete();
+		void delete_VAO();
 
 
 

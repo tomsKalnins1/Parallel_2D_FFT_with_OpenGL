@@ -10,10 +10,9 @@ VAO::VAO() {
 
 }
 
-void VAO::linkVBO(VBO vbo, int numCoords, int numTexCoords) {
+void VAO::link_VBO(VBO vbo, int numCoords, int numTexCoords) {
 
-	vbo.Bind();
-
+	vbo.bind_VBO();
 	glBindVertexArray(ID);
 
 	if (numCoords == 2) {
@@ -22,33 +21,22 @@ void VAO::linkVBO(VBO vbo, int numCoords, int numTexCoords) {
 
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-			//accidentally typing 2 instead of 1 in the first arg cause access vialition for glDrawArrays
 
-			for (int i = 0; i < 6; ++i) {
-
-				//	cout << "vbo coor = " << vbo.vert[i] << endl;
-
-			}
 		}
 	}
 
 	if (numCoords == 3) {
 	
 		if (numTexCoords == 2) {
-			cout << "cumCoords = 3, nuTexCoords = 2" << endl;
+
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 			glEnableVertexAttribArray(0);
-
 			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 			glEnableVertexAttribArray(1);
-
 			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 			glEnableVertexAttribArray(2);
-
-
 		
 		}
 
@@ -64,7 +52,7 @@ void VAO::linkVBO(VBO vbo, int numCoords, int numTexCoords) {
 	}
 }
 
-void VAO::Bind() {
+void VAO::bind_VAO() {
 
 	glBindVertexArray(ID);
 
@@ -72,13 +60,13 @@ void VAO::Bind() {
 
 }
 
-void VAO::Unbind() {
+void VAO::unbind_VAO() {
 
 	glBindVertexArray(0);
 
 }
 
-void VAO::Delete() {
+void VAO::delete_VAO() {
 
 	glDeleteVertexArrays(1, &ID);
 

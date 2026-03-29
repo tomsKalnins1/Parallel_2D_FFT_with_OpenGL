@@ -11,33 +11,31 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "Shader_source.h"
+#include "ShaderSource.h"
 
 
-using namespace std;
+using std::string;
 
 
-class Shader {
+class ShaderProgram {
 
 public:
 
 	unsigned int ID;
 
-	Shader(const char* vertex_shader, const char* fragment_shader);
-	Shader(const char* compute_shader, fft_orientation orientation, int num_samples, int samples_per_processor);
-	Shader(const char* compute_shader, int num_samples, int samples_per_processor);
-	Shader() = delete;
+	ShaderProgram(const char* vertex_shader, const char* fragment_shader);
+	//ShaderProgram(const char* compute_shader, int num_samples, int samples_per_processor);
+	ShaderProgram(const char* compute_shader, int num_samples, int samples_per_processor);
+	ShaderProgram() = delete;
 
-	void Use();
+	void use_shader_prog();
 
-	void Delete();
+	void delete_shader_prog();
 
-	void bindUniformTexToTexUnit(string uniformName, int texObjNr);
-
-	static void setUniform(unsigned int shader_id, string uniformName, glm::vec3 vector);
-	static void setUniform(unsigned int shader_id, string uniformName, glm::mat4 matrix);
-	static void setUniform(unsigned int shader_id, string uniformName, float value);
-	static void setUniform(unsigned int shader_id, string uniformName,unsigned int value);
+	static void set_uniform(unsigned int shader_id, string uniformName, glm::vec3 vector);
+	static void set_uniform(unsigned int shader_id, string uniformName, glm::mat4 matrix);
+	static void set_uniform(unsigned int shader_id, string uniformName, float value);
+	static void set_uniform(unsigned int shader_id, string uniformName,unsigned int value);
 
 	static int num_bits(unsigned int number);
 

@@ -4,7 +4,7 @@ layout (location = 0) in vec2 aPos; //in the state machine the input positions t
 layout (location = 1) in vec2 aTex;
 
 
-out vec2 texCoor;
+out vec2 tex_coor;
 uniform mat4 move;
 
 
@@ -12,6 +12,6 @@ void main(){
 
    gl_Position = move * vec4(aPos.x, aPos.y, 0.0, 1.0); 
 
-   texCoor = vec2(aTex.x, aTex.y);
+   tex_coor = vec2(aTex.x, aTex.y);
 
 }

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-using namespace std;
+using std::string;
 
 class Texture{
 
@@ -30,13 +30,13 @@ public:
 
 	Texture(GLenum internal_format = GL_RGBA32F, GLenum format = GL_RGBA, string file_name = "no_file", int width = 256, int height = 256);
 
-	void Bind();
+	void bind_texture();
 
 	void bind_image_2D(int layout);
 
-	void Unbind();
+	void unbind_texture();
 
-	void Delete();
+	void delete_texture();
 
 	static void activate_tex_unit(int i);
 

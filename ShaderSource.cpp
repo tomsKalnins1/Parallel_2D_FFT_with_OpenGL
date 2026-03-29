@@ -1,6 +1,6 @@
-#include "Shader_source.h"
+#include "ShaderSource.h"
 
-shader_source::shader_source(string file_path, GLenum shader_type) {
+ShaderSource::ShaderSource(string file_path, GLenum shader_type) {
 
 	string shader_source = get_file_content(file_path.c_str());
 
@@ -21,11 +21,11 @@ shader_source::shader_source(string file_path, GLenum shader_type) {
 
 }
 
-shader_source::shader_source(string file_path, GLenum shader_type, fft_orientation orientation, int num_samples, int samples_per_processor) {
+ShaderSource::ShaderSource(string file_path, GLenum shader_type, int num_samples, int samples_per_processor) {
 	
 	string shader_source = get_file_content(file_path.c_str());
 
-	shader_source = set_compute_shader_values(shader_source, num_samples, samples_per_processor, orientation);
+	shader_source = set_compute_shader_values(shader_source, num_samples, samples_per_processor);
 
 	const char* shader_source_char = shader_source.c_str();
 
@@ -44,21 +44,18 @@ shader_source::shader_source(string file_path, GLenum shader_type, fft_orientati
 }
 
 
-string shader_source::get_file_content(const char* file_path) {
+string ShaderSource::get_file_content(const char* file_path) {
 
 	std::ifstream in(file_path, std::ios::binary);
 
 	if (in) {
 		
-
 		string content;
 
 		in.seekg(0, std::ios::end);
 		content.resize(in.tellg());
-		
 		in.seekg(0, std::ios::beg);
 		in.read(&content[0], content.size());
-
 		in.close();
 		
 		return content;
@@ -69,27 +66,15 @@ string shader_source::get_file_content(const char* file_path) {
 }
 
 
-string shader_source::set_compute_shader_values(string shader_source_file, int num_samples, int samples_per_processor, fft_orientation orientation) {
+string ShaderSource::set_compute_shader_values(string shader_source_file, int num_samples, int samples_per_processor) {
 
 	string shader_file = "";
-	string invocation_orient = "";
+	string invocation_orient = "X_INVOCATIONS";;
 	string samples = "NUM_SAMPLES";
 
-	if (orientation == HORIZONTAL) {
-		invocation_orient = "X_INVOCATIONS";
-	}
-	else {
-		invocation_orient = "Y_INVOCATIONS";
-	}
-
-	
-
 	int index = shader_source_file.find(invocation_orient);
-
 	shader_source_file = shader_source_file.replace(index, invocation_orient.size(), std::to_string(num_samples / samples_per_processor));
 	
-	std::cout << "NUM INVOCATIONS = " << (num_samples / samples_per_processor) << '\n';
-
 	while (shader_source_file.find(samples) < shader_source_file.size()) {
 
 		index = shader_source_file.find(samples);
@@ -97,7 +82,7 @@ string shader_source::set_compute_shader_values(string shader_source_file, int n
 		shader_source_file = shader_source_file.replace(index, samples.size(), std::to_string(num_samples));
 
 	}
-//	std::cout << shader_source_file << '\n';
+
 	return shader_source_file;
 
 }

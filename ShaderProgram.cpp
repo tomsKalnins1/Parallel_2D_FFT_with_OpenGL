@@ -1,57 +1,25 @@
-#include "Shader_source.h"
 #include "ShaderProgram.h"
 
 
+ShaderProgram::ShaderProgram(const char* path_to_vert, const char* path_to_frag) {
 
-string getFileContent(const char* path) {
-
-	ifstream in(path, ios::binary);
-
-	if (in) {
-	
-		string content;
-	
-		in.seekg(0, ios::end);
-
-		content.resize(in.tellg());
-
-
-		in.seekg(0, ios::beg);
-
-		in.read(&content[0], content.size());
-
-		in.close();
-
-	//	cout << content << '\n';
-
-		return content;
-	
-	}
-
-	throw(errno);
-
-}
-
-Shader::Shader(const char* pathToVert, const char* pathToFrag) {
-
-	shader_source vert(pathToVert, GL_VERTEX_SHADER);
-	shader_source frag(pathToFrag, GL_FRAGMENT_SHADER);
-
+	ShaderSource vert(path_to_vert, GL_VERTEX_SHADER);
+	ShaderSource frag(path_to_frag, GL_FRAGMENT_SHADER);
 
 	ID = glCreateProgram();
 
 	glAttachShader(ID, vert.ID);
 	glAttachShader(ID, frag.ID);
-
 	glLinkProgram(ID);
-	//! mistake always add linking error checking (wrote one letter in uppercase where it should haev been lowercase
-	//! the linking of program failed silently)
 	GLint linkSuccess = 0;
 	glGetProgramiv(ID, GL_LINK_STATUS, &linkSuccess);
+
 	if (linkSuccess == GL_FALSE) {
+
 		char infoLog[1024];
 		glGetProgramInfoLog(ID, 1024, NULL, infoLog);
-		std::cout << "PROGRAM LINK FAILED:\n" << infoLog << std::endl;
+		std::cout << "PROGRAM LINK FAILED, PROBLEM WITH "<< path_to_vert << "	OR " << path_to_frag << "  :  \n" << infoLog << std::endl;
+
 	}
 
 	glDeleteShader(vert.ID);
@@ -59,24 +27,23 @@ Shader::Shader(const char* pathToVert, const char* pathToFrag) {
 
 }
 
-Shader::Shader(const char* path_to_comp, int num_samples, int samples_per_processor) {
+ShaderProgram::ShaderProgram(const char* path_to_comp, int num_samples, int samples_per_processor) {
 
-	shader_source comp(path_to_comp, GL_COMPUTE_SHADER, HORIZONTAL, num_samples, samples_per_processor);
+	ShaderSource comp(path_to_comp, GL_COMPUTE_SHADER, num_samples, samples_per_processor);
 
 	ID = glCreateProgram();
 
 	glAttachShader(ID, comp.ID);
-
-
 	glLinkProgram(ID);
-	//! mistake always add linking error checking (wrote one letter in uppercase where it should haev been lowercase
-	//! the linking of program failed silently)
 	GLint linkSuccess = 0;
 	glGetProgramiv(ID, GL_LINK_STATUS, &linkSuccess);
+
 	if (linkSuccess == GL_FALSE) {
+
 		char infoLog[1024];
 		glGetProgramInfoLog(ID, 1024, NULL, infoLog);
-		std::cout << "PROGRAM LINK FAILED:\n" << infoLog << std::endl;
+		std::cout << "PROGRAM LINK FAILED, PROBLEM WITH " << path_to_comp <<" :\n" << infoLog << std::endl;
+
 	}
 
 	glDeleteShader(comp.ID);
@@ -85,42 +52,18 @@ Shader::Shader(const char* path_to_comp, int num_samples, int samples_per_proces
 }
 
 
-Shader::Shader(const char* compute_shader, fft_orientation orientation, int num_samples, int samples_per_processor) {
+void ShaderProgram::use_shader_prog() {
 
-	shader_source comp(compute_shader, GL_COMPUTE_SHADER, orientation, num_samples, samples_per_processor);
-
-
-
-	ID = glCreateProgram();
-
-	glAttachShader(ID, comp.ID);
-
-
-	glLinkProgram(ID);
-
-	GLint linkSuccess = 0;
-	glGetProgramiv(ID, GL_LINK_STATUS, &linkSuccess);
-	if (linkSuccess == GL_FALSE) {
-		char infoLog[1024];
-		glGetProgramInfoLog(ID, 1024, NULL, infoLog);
-		std::cout << "PROGRAM LINK FAILED:\n" << infoLog << std::endl;
-	}
-
-	glDeleteShader(comp.ID);
-
-}
-
-void Shader::Use() {
 	glUseProgram(ID);
+
 }
 
-int Shader::num_bits(unsigned int number_samples) {
+int ShaderProgram::num_bits(unsigned int number_samples) {
 
 	unsigned int num = 1;
 	unsigned int bits = 0;
 
-	while (num < number_samples)
-	{
+	while (num < number_samples){
 
 		num <<= 1;
 		bits++;
@@ -131,25 +74,17 @@ int Shader::num_bits(unsigned int number_samples) {
 
 }
 
-void Shader::Delete() {
+void ShaderProgram::delete_shader_prog() {
 
 	glDeleteProgram(ID);
 
 }
 
-void Shader::bindUniformTexToTexUnit(string uniformName, int texObjNr) {
 
-	const char* name = uniformName.c_str();
-
-	unsigned int location = glGetUniformLocation(ID, name);
-
-	glUniform1i(location, texObjNr);
-
-}
-
-void Shader:: setUniform(unsigned int shader_id, string uniformName, glm::vec3 vector) {
+void ShaderProgram:: set_uniform(unsigned int shader_id, string uniformName, glm::vec3 vector) {
 
 	int progID;
+
 	glGetIntegerv(GL_CURRENT_PROGRAM, &progID);
 
 	if(shader_id != progID) {
@@ -165,7 +100,7 @@ void Shader:: setUniform(unsigned int shader_id, string uniformName, glm::vec3 v
 
 }
 
-void Shader::setUniform(unsigned int shader_id, string uniformName, glm::mat4 matrix) {
+void ShaderProgram::set_uniform(unsigned int shader_id, string uniformName, glm::mat4 matrix) {
 
 	int progID;
 	glGetIntegerv(GL_CURRENT_PROGRAM, &progID);
@@ -182,9 +117,10 @@ void Shader::setUniform(unsigned int shader_id, string uniformName, glm::mat4 ma
 
 }
 
-void Shader::setUniform(unsigned int shader_id, string uniformName, float value) {
+void ShaderProgram::set_uniform(unsigned int shader_id, string uniformName, float value) {
 
 	int progID;
+
 	glGetIntegerv(GL_CURRENT_PROGRAM, &progID);
 
 	if (shader_id != progID) {
@@ -192,7 +128,6 @@ void Shader::setUniform(unsigned int shader_id, string uniformName, float value)
 		glUseProgram(shader_id);
 
 	}
-	//const char* fuck = uniformName.c_str();
 
 	unsigned int loc = glGetUniformLocation(shader_id, uniformName.c_str());
 
@@ -201,9 +136,10 @@ void Shader::setUniform(unsigned int shader_id, string uniformName, float value)
 }
 
 
-void Shader::setUniform(unsigned int shader_id, string uniformName,unsigned int value) {
+void ShaderProgram::set_uniform(unsigned int shader_id, string uniformName,unsigned int value) {
 
 	int progID;
+
 	glGetIntegerv(GL_CURRENT_PROGRAM, &progID);
 
 	if (shader_id != progID) {
@@ -211,7 +147,6 @@ void Shader::setUniform(unsigned int shader_id, string uniformName,unsigned int 
 		glUseProgram(shader_id);
 
 	}
-	//const char* fuck = uniformName.c_str();
 
 	unsigned int loc = glGetUniformLocation(shader_id, uniformName.c_str());
 

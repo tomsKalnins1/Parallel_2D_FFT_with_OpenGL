@@ -12,13 +12,12 @@ public:
 	GLfloat* vert;
 	VBO(GLfloat* vertices, GLsizeiptr size);
 
-	void Bind();
+	void bind_VBO();
 
-	void Unbind();
+	void unbind_VBO();
 
-	void Delete();
+	void delete_VBO();
 
-	void vertToStr();
 
 
 

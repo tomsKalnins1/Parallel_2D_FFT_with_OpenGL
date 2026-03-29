@@ -4,39 +4,26 @@ using namespace std;
 
 VBO::VBO(GLfloat* vertices, GLsizeiptr size) {
 	vert = vertices;
-	cout << "size of vertices = " << size << endl;
 	glGenBuffers(1, &ID);
 	glBindBuffer(GL_ARRAY_BUFFER, ID);
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 
 }
 
-void VBO::Bind() {
+void VBO::bind_VBO() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, ID);
 
 }
 
-void VBO::Unbind() {
+void VBO::unbind_VBO() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 }
 
-void VBO::Delete() {
+void VBO::delete_VBO() {
 
 	glDeleteBuffers(1, &ID);
-
-}
-
-void VBO::vertToStr() {
-
-	int s = sizeof(vert) / 4;
-
-	for (int i = 0; i < s; ++i) {
-	
-		cout << vert[i] << endl;
-	
-	}
 
 }

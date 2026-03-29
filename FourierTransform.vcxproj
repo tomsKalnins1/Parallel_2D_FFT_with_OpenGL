@@ -149,12 +149,11 @@
   <ItemGroup>
     <None Include="..\Iterative_fft\Main.cpp" />
     <ClCompile Include="fft_2D.cpp" />
-    <ClCompile Include="EBO.cpp" />
     <ClCompile Include="glad.c" />
     <None Include="freq_comp_frag.fs" />
     <None Include="Main-3.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Shader_source.cpp" />
+    <ClCompile Include="ShaderSource.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="stb.cpp" />
     <ClCompile Include="stb_write.cpp" />
@@ -165,7 +164,7 @@
   <ItemGroup>
     <ClInclude Include="fft_2D_images.h" />
     <ClInclude Include="EBO.h" />
-    <ClInclude Include="Shader_source.h" />
+    <ClInclude Include="ShaderSource.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Texture.h" />
@@ -175,13 +174,11 @@
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="comp_frag.fs" />
-    <None Include="frag.fs" />
+    <None Include="frag_img_anim_ifft.fs" />
     <None Include="source_img_frag.fs" />
     <None Include="fragMesh.fs" />
     <None Include="test_compute.comp" />
-    <None Include="test_compute_horiz.cs" />
-    <None Include="test_compute_vert.cs" />
-    <None Include="transpose_CCW.cs" />
+    <None Include="compute_FFT_horiz.cs" />
     <None Include="transpose_CW.cs" />
     <None Include="vert.vs" />
     <None Include="source_img_vert.vs" />
