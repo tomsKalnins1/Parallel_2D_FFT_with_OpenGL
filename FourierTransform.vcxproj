@@ -148,7 +148,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\Iterative_fft\Main.cpp" />
-    <ClCompile Include="fft_2D.cpp" />
     <ClCompile Include="glad.c" />
     <None Include="freq_comp_frag.fs" />
     <None Include="Main-3.cpp" />

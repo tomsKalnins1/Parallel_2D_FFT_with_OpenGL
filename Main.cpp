@@ -17,7 +17,7 @@
 #include "VAO.h"
 #include "VBO.h"
 #include "Texture.h"
-#include "fft_2D_images.h"
+
 
 #define THE_PI 3.1415926535897932385
 
@@ -131,7 +131,6 @@ int main() {
 	string v = "vert.vs";
 	string f = "frag_img_anim_ifft.fs";
 	
-	string source_vert = "source_img_vert.vs";
 	string source_frag = "source_img_frag.fs";
 
 	string parts_frag = "freq_comp_frag.fs";
@@ -151,7 +150,7 @@ int main() {
 
 	//---------------------------------------------------------------------------------DISPLAY ORIGINAL IMAGE
 
-	ShaderProgram shF(source_vert.c_str(), source_frag.c_str());
+	ShaderProgram shF(v.c_str(), source_frag.c_str());
 
 	VAO vao_s;
 	vao_s.bind_VAO();
@@ -228,7 +227,7 @@ int main() {
 	
 	//---------------------------------------------------------------------------------TRANSPOSE
 
-	string path_trans_v = "transpose_CW.cs";
+	string path_trans_v = "transpose.cs";
 
 	ShaderProgram rot(path_trans_v.c_str(), 256, 4);
 

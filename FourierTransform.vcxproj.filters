@@ -39,9 +39,6 @@
     <ClCompile Include="stb_write.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fft_2D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ShaderSource.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>

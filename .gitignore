@@ -1,6 +1,7 @@
 .vs/
 Debug/
 Release/
+Testing_fft_code/
 x64/
 x86/
 *.VC.db
