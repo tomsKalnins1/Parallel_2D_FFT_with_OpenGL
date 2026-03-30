@@ -13,6 +13,7 @@
 #include <math.h>
 #include <string>
 
+
 #include "ShaderProgram.h"
 #include "VAO.h"
 #include "VBO.h"
@@ -187,15 +188,9 @@ int main() {
 
 	ShaderProgram compute_prog_h_0("fft_compute_horizontal.cs", 256, 4);
 
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\camera_man.png";
+	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\Test_images\\camera_man.png";
 
 	Texture input_img(GL_RGBA32F, GL_RGBA, pathToImage, 256, 256);
-
-	int width, height, numColorChannels;
-	float* image_tst = stbi_loadf(pathToImage.c_str(), &width, &height, &numColorChannels, 0);
-	
-
-	//---------------------------------------------------------------------------------TEST NONPARALLEL FFT TIME
 
 	Texture first_fft = Texture{};
 	Texture second_fft = Texture{};
@@ -220,7 +215,7 @@ int main() {
 	glCreateBuffers(1, &buffer_comp_h_0);
 	glNamedBufferStorage(buffer_comp_h_0, sizeof(Data), &ssbo_fft_data_H, GL_DYNAMIC_STORAGE_BIT);	
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, buffer_comp_h_0);
-
+	
 	compute_prog_h_0.use_shader_prog();
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256 / 1), 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -305,6 +300,8 @@ int main() {
 	Texture fft_1_transp(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 	Texture fft_2(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 	Texture ifft(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
+
+	//output_1.ID = fft_2d_output_id;
 
 	Texture::activate_tex_unit(0);
 	output_1.bind_texture();
@@ -510,9 +507,9 @@ int main() {
 		last_time = curr_time;
 		if (delta_time > 0.0f && add_waves_1 <= 128 && add_waves != 128) {
 			delta_time = 0;
-			add_waves_1++;
+			add_waves_1+=6;
 			if (add_waves_1 >= 128) {
-				add_waves++;
+				add_waves+=1;
 				add_waves_1 = 0;
 			}
 

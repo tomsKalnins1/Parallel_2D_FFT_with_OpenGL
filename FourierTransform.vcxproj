@@ -161,7 +161,6 @@
     <ClCompile Include="VBO.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="fft_2D_images.h" />
     <ClInclude Include="EBO.h" />
     <ClInclude Include="ShaderSource.h" />
     <ClInclude Include="ShaderProgram.h" />
@@ -172,7 +171,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
-    <None Include="comp_frag.fs" />
     <None Include="frag_img_anim_ifft.fs" />
     <None Include="source_img_frag.fs" />
     <None Include="fragMesh.fs" />
@@ -182,6 +180,9 @@
     <None Include="vert.vs" />
     <None Include="source_img_vert.vs" />
     <None Include="vertMesh.vs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Test_images\camera_man.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

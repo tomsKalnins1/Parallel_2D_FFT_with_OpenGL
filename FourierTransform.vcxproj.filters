@@ -62,9 +62,6 @@
     <ClInclude Include="EBO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="fft_2D_images.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ShaderSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -94,9 +91,6 @@
     <None Include="test_compute.comp">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="comp_frag.fs">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="..\Iterative_fft\Main.cpp">
       <Filter>Resource Files</Filter>
     </None>
@@ -112,5 +106,10 @@
     <None Include="transpose_CW.cs">
       <Filter>Resource Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Test_images\camera_man.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
