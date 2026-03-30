@@ -13,3 +13,7 @@ x86/
 *.log
 *.tlog
 *.ipch
+glad.c
+stb_write.cpp
+stb_image.h
+stb.cpp
