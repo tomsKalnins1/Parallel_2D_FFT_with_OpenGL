@@ -456,9 +456,11 @@ int main() {
 
 		trans = glm::mat4(1.0f);
 
+	
 		trans = glm::translate(trans, glm::vec3(0.5f, -0.4f, 0.0f));
 
 		trans = glm::scale(trans, glm::vec3(0.8f, 0.8f, 0.0f));
+
 
 
 		ShaderProgram::set_uniform(shF.ID, "move", trans);
@@ -498,7 +500,7 @@ int main() {
 
 		if (save) {
 
-			//	saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\FFT_OUTPUT_DATA_COMPLEX_NUMBERS.png");
+			//saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\FFT_OUTPUT_DATA_POWER_SPECTRUM.png");
 	
 		}
 		

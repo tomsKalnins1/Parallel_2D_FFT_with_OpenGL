@@ -245,11 +245,13 @@ void main(){
         vec2 v = vec2(input_b[texC_g.x + gl_WorkGroupSize.x * i].x, input_b[texC_g.x + gl_WorkGroupSize.x * i].y);
 
         vec4 v_out = vec4(v.x, v.y, 0.0, 1.0);
+
         if(norm == (255.0 * 255.0)){
 
-            v_out = vec4(v.x/norm, v.x/norm, v.x/norm, 1.0);
+          v_out = vec4(v.x/norm, v.x/norm, v.x/norm, 1.0);
 
         }
+
         imageStore(fft_data, ivec2(texC_g.x + gl_WorkGroupSize.x * i, texC_g.y), v_out);
 
         
