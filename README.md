@@ -3,11 +3,7 @@
 <p style="text-align: justify;">
 Fast Fourier Transform is a way to break down a signal into sinusoids which when added up result in the the original signal. Below is an example of a function and the two compoinents it consists of for a 1D function.
 </p>
-<img src="https://github.com/tomsKalnins1/parallel-FFT_2D-with-OpenGl/blob/main/visualized_2d_frequecies/freq_2.png" alt="Example Image" width="400" style="display:inline-block">/>
-<img src="https://github.com/tomsKalnins1/parallel-FFT_2D-with-OpenGl/blob/main/visualized_2d_frequecies/freq_2.png" alt="Example Image" width="400" style="display:inline-block">/>
-<img src="https://github.com/tomsKalnins1/parallel-FFT_2D-with-OpenGl/blob/main/visualized_2d_frequecies/freq_2.png" alt="Example Image" width="400" style="display:inline-block">/>
-
-<img src="visualized_2d_frequecies/INVERSE_rect_orig_16.png" style="float: left; margin-right: 15px;">
+<img src="https://github.com/tomsKalnins1/parallel-FFT_2D-with-OpenGl/blob/main/visualized_2d_frequecies/F_2.png" style="float: left; margin-right: 15px;">
 <p style="text-align: justify;">
 Something very similar can be done also for images when the 1D FT concept is extended to 2D. On the left is an example of a 2D frequency (this however is fro visual purposes and is not how it would actually look)
 In fact I computed the magnitude of one frequency component and multiplied the output of inverse Fourier Transform by log(magnitude).

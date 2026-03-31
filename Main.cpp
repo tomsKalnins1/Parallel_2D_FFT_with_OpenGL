@@ -188,7 +188,7 @@ int main() {
 
 	ShaderProgram compute_prog_h_0("fft_compute_horizontal.cs", 256, 4);
 
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\Test_images\\camera_man.png";
+	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\Test_images\\cameraman.png";
 
 	Texture input_img(GL_RGBA32F, GL_RGBA, pathToImage, 256, 256);
 
@@ -509,7 +509,7 @@ int main() {
 		last_time = curr_time;
 		if (delta_time > 0.0f && add_waves_1 <= 128 && add_waves != 128) {
 			delta_time = 0;
-			add_waves_1+=6;
+			add_waves_1+=3;
 			if (add_waves_1 >= 128) {
 				add_waves+=1;
 				add_waves_1 = 0;

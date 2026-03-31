@@ -27,7 +27,7 @@ void main(){
 	freq = texelFetch(real_imag, ivec2((wave_lim_0),(wave_lim_1)), 0);
 	angle  = 2.0 * M_PI * ((wave_lim_0) * coors.x / N + (wave_lim_1) * coors.y /N);
 	magnitude = pow(pow(freq.y, 2.0) + pow(freq.x, 2.0), 0.5);
-	visualization = log(magnitude);
+	visualization = log2(magnitude);
 	
 	waveSum += visualization*(freq.x * cos(angle) - freq.y * sin(angle));
 
@@ -35,7 +35,7 @@ void main(){
 	freq = texelFetch(real_imag, ivec2(( N_i/2 + wave_lim_0), (wave_lim_1)), 0);
 	angle  = 2.0 * M_PI * ((N_i/2.0 + wave_lim_0) * coors.x / N + (wave_lim_1) * coors.y /N);
 	magnitude = pow(pow(freq.y, 2.0) + pow(freq.x, 2.0), 0.5);
-	visualization = log(magnitude);
+	visualization = log2(magnitude);
 
 	waveSum += visualization*(freq.x * cos(angle) - freq.y * sin(angle));
 
@@ -43,7 +43,7 @@ void main(){
 	freq = texelFetch(real_imag, ivec2((wave_lim_0), ( N_i/2 + wave_lim_1)), 0);	
 	angle  = 2.0 * M_PI * ((wave_lim_0) * coors.x / N + ( N_i/2 + wave_lim_1) * coors.y / N);
 	magnitude = pow(pow(freq.y, 2.0) + pow(freq.x, 2.0), 0.5);
-	visualization = log(magnitude);
+	visualization = log2(magnitude);
 
 	waveSum += visualization*(freq.x * cos(angle) - freq.y * sin(angle));
 
@@ -51,7 +51,7 @@ void main(){
 	freq = texelFetch(real_imag, ivec2((N_i/2 + wave_lim_0), (N_i/2 + wave_lim_1)), 0);
 	angle  = 2.0 * M_PI * ((N_i/2 + wave_lim_0) * coors.x / N + (N_i/2 + wave_lim_1) * coors.y /N);
 	magnitude = pow(pow(freq.y, 2.0) + pow(freq.x, 2.0), 0.5);
-	visualization = log(magnitude);
+	visualization = log2(magnitude);
 
 	waveSum += visualization*(freq.x * cos(angle) - freq.y * sin(angle));
 
