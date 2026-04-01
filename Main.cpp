@@ -188,7 +188,7 @@ int main() {
 
 	ShaderProgram compute_prog_h_0("fft_compute_horizontal.cs", 256, 4);
 
-	string pathToImage = "C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\Test_images\\cameraman.png";
+	string pathToImage = "Test_images\\CAMERAMAN_ORIGINAL.png";
 
 	Texture input_img(GL_RGBA32F, GL_RGBA, pathToImage, 256, 256);
 
