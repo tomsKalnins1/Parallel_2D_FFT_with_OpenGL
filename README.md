@@ -1,13 +1,22 @@
 <h1>2D Parallel Fast Fourier Transform</h1>
+<p style="text-align: justify;">
 
-<p style="text-align: justify;">
-Fast Fourier Transform is a way to break down a signal into sinusoids which when added up result in the the original signal. Below is an example of a function and the two compoinents it consists of for a 1D function.
+This is a naive implementation of the parallel 2D fft.
+Takes in an image that has a power of 2 as the hight and width. When run the program displays the separate frequencies being added up in the  
+
 </p>
-<img src="https://github.com/tomsKalnins1/parallel-FFT_2D-with-OpenGl/blob/main/visualized_2d_frequecies/FFT_1D_github.png" style="float: left; margin-right: 15px;">
-<img src="https://github.com/tomsKalnins1/parallel-FFT_2D-with-OpenGl/blob/main/visualized_2d_frequecies/F_3_F_2_github.png" style="float: left; margin-right: 15px;">
+<img src="visualized_2d_frequecies/image_fft_ifft_image.png" style="float: left; margin-right: 15px;">
 <p style="text-align: justify;">
-Something very similar can be done also for images when the 1D FT concept is extended to 2D. On the left is an example of a 2D frequency (this however is fro visual purposes and is not how it would actually look)
-In fact I computed the magnitude of one frequency component and multiplied the output of inverse Fourier Transform by log(magnitude).
+
+Above one the left is the original input image, in the middle is the an image I used to store the complex outputs of the FFT in to later use for the IFFT result of which is the image on the right.
+However the FFT output can be interpreted in terms of amplitude and phase and those value stored in a texture or image as below (phase is image in the middle, amplitude is the rightmost image).
+
+</p>
+<img src="visualized_2d_frequecies/FFT_2D_IMG_TO_MAGNITUDE_PHASE.png" style="float: left; margin-right: 15px;">
+
+<h2 style="clear: both">Reading the input image</h2>
+<p style="text-align: justify;">
+At this point the program takes in black and white RGBA image as a texture. Compute shader performs parallel version of 1D fft on each row of the image, at each dispatch there are as many workgroups as there are rows, while each work group has number of sample 
 </p>
 <h2 style="clear: both">Wrapped Image Example</h2>
 
