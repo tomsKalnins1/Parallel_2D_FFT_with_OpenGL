@@ -148,9 +148,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\Iterative_fft\Main.cpp" />
+    <ClCompile Include="FFT_not_with_shaders\fft_2D.cpp" />
+    <None Include="FFT_not_with_shaders\Main-3.cpp" />
     <ClCompile Include="glad.c" />
     <None Include="freq_comp_frag.fs" />
-    <None Include="Main-3.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="ShaderSource.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
@@ -161,7 +162,7 @@
     <ClCompile Include="VBO.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EBO.h" />
+    <ClInclude Include="FFT_not_with_shaders\fft_2D.h" />
     <ClInclude Include="ShaderSource.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="stb_image.h" />

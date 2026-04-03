@@ -12,7 +12,7 @@
 #include <cmath>
 #include <math.h>
 #include <string>
-
+#include "FFT_not_with_shaders\fft_2D.h"
 
 #include "ShaderProgram.h"
 #include "VAO.h"
@@ -229,12 +229,10 @@ int main() {
 	Texture::activate_tex_unit(7);
 	first_fft.bind_texture();
 	first_fft.bind_image_2D(0);
-
 	Texture::reset_to_base(input_img);
 	Texture::activate_tex_unit(8);
 	input_img.bind_texture();
 	input_img.bind_image_2D(1);
-
 	rot.use_shader_prog();
 	glDispatchCompute((unsigned int)ceil(1), (unsigned int)ceil(256), 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -283,16 +281,86 @@ int main() {
 
 	float fft_compute_time = end_time - start_time;
 
-	cout << "TIME FOR 256X256 IMG FFT = " << fft_compute_time << " seconds \n";
+	cout << "COMPUTE TIME FOR PARALLEL 2D FFT ON 256x256 IMG =  " << fft_compute_time << " seconds \n";
+
 
 	//---------------------------------------------------------------------------------FFT COMPLETE
 
 
+	//---------------------------------------------------------------------------------TESTING THE SINGLE-THREADED 2D FFT
+	/*
+	float start_time_1 = glfwGetTime();
+
+	vector<complex<float>> fftInputRow;
+	unsigned char* image_fft;
+	int fftHeight, fftWidth, fftNumChannels;
+	image_fft = stbi_load(pathToImage.c_str(), &fftWidth, &fftHeight, &fftNumChannels, 0);
+
+	vector<vector<complex<float>>> imageData_rows;
+
+
+	int y1 = 0;
+	int sizeImg = fftHeight;
+
+	for (int y = 0; y < sizeImg; y++) {
+
+		vector<complex<float>> one_row;
+
+		for (int x = 0; x < sizeImg; x++) {
+
+			complex<float> c_img((float)image_fft[y1] / 255.0f, 0.0f);
+			y1 += 4;
+			one_row.push_back(c_img);
+
+		}
+
+		imageData_rows.push_back(one_row);
+
+	}
+
+	start_time = glfwGetTime();
+
+	vector<vector<complex<float>>> image_2D_freq_sprectrum = fft2D::fft_2D(imageData_rows, -1);
+
+	float* data_texture = new float[256 * 256 * 4];
+
+
+	int index = 0;
+	int size_fft_output = image_2D_freq_sprectrum.size();
+
+	for (int x = 0; x < size_fft_output; x++) {
+
+		for (int y = 0; y < size_fft_output; y++) {
+
+
+			*(data_texture + index) = image_2D_freq_sprectrum[x][y].real();
+			*(data_texture + index + 1) = image_2D_freq_sprectrum[x][y].imag();
+			*(data_texture + index + 2) = 0.0f;
+			*(data_texture + index + 3) = 1.0f;
+			index += 4;
+		}
+
+	}
+
+	unsigned int fft_output_texture;
+	glGenTextures(1, &fft_output_texture);
+	glBindTexture(GL_TEXTURE_2D, fft_output_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 256, 256, 0, GL_RGBA, GL_FLOAT, data_texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	float end_time_1 = glfwGetTime();
+
+	float fft_compute_time_1 = end_time_1 - start_time_1;
+
+	cout << "COMPUTE TIME FOR SINGLE THREAD 2D FFT ON 256x256 IMG =  " << fft_compute_time_1 << '\n';
+	*/
+
+	//---------------------------------------------------------------------------------TESTING THE SINGLE-THREADED 2D FFT
+
 	//---------------------------------------------------------------------------------INVERSE FFT WITH COMPUTE SHADERS
 	
 	//---------------------------------------------------------------------------------IFFT ON ROWS
-
-	//ShaderProgram compute_prog_h_2("fft_compute_horizontal.cs", HORIZONTAL, 256, 4);
 
 	start_time = glfwGetTime();
 
@@ -301,7 +369,7 @@ int main() {
 	Texture fft_2(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 	Texture ifft(GL_RGBA32F, GL_RGBA, "no_file", 256, 256);
 
-	//output_1.ID = fft_2d_output_id;
+	//output_1.ID = fft_output_texture;
 
 	Texture::activate_tex_unit(0);
 	output_1.bind_texture();
@@ -382,7 +450,7 @@ int main() {
 
 	fft_compute_time = end_time - start_time;
 
-	cout << "TIME FOR 256X256 IMG IFFT = " << fft_compute_time << " seconds \n";
+	cout << "COMPUTE TIME FOR PARALLEL 2D FFT ON 256x256 IMG =  " << fft_compute_time << " seconds \n";
 
 	//---------------------------------------------------------------------------------IFFT COMPLETE
 

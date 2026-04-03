@@ -94,7 +94,12 @@ void loadPixs_from_img() {
         }
 
         if(forward == -1 && vertical == 0){
-            //NOOOOOO DDDDEEEEEEEMMM GAMMA CORRECTION!!
+/*
+reverse the gamma correction done by stbi_loadf function as it caused the fft output to be too dark and lose detail.
+before when loading image as unsigned chars and converting then to floats when testing by single thread fft the image did not
+have this problem of being too dark while loading the images as floats did, so I spent about two days looking for the reason why this this happens rewriting many parts
+until I found out that the stbi_loadf does gamma correction with 2.2
+ */
             x_x = pow(imageLoad(screen, ivec2(texCoor.x + gl_WorkGroupSize.x * i, texCoor.y)).x, 1.0 / 2.2);
 
         }
@@ -181,7 +186,13 @@ void fft(){
 
     uint k = 2;
     uint num_lvls = uint(log2(num_samples_h));
-
+/*
+The number of levels is how many times k has to be doubled, which based on the number of supersteps and after each
+superstep everything has to be synchronized before doing calculations on the values output by this stage.
+(num_samples_h / 2) = num butterflies is half of num samples, and / gl_WorkGroupSize.x <- how many butterglies per thread
+each thread while working per butterfly is responsible by one freq. below nyquist lim. of that perticular sub-fft  and its
+counterpart after that limit, that is why mod k/2 (periodicity property of complex rotation).
+*/
     uint bttrfls_per_thrd = (num_samples_h / 2) / gl_WorkGroupSize.x;
 
     for (uint lvl = 0; lvl < num_lvls; lvl++){
@@ -194,7 +205,10 @@ void fft(){
             float angle = 2.0 * M_PI * float((t_id * bttrfls_per_thrd + b) % (k / 2)) / float(k);
 
             vec2 twiddle = vec2(cos(angle), forward * sin(angle));
-
+/*
+at each super step the num. blocks gets smaller and the offsets get a larger range, the block as a concept is 
+used to be able to mag a thread_id to the right element in the array
+*/
             uint block = (t_id * bttrfls_per_thrd + b) / (k / 2);
             uint offset = (t_id * bttrfls_per_thrd + b) % (k / 2);
 
@@ -203,11 +217,11 @@ void fft(){
             vec2 even = input_b[e];
             vec2 odd = input_b[o];
 
-            vec2 freq = even + mult(odd, twiddle);
-            vec2 freq_alias = even - mult(odd, twiddle);
+            vec2 freq_0 = even + mult(odd, twiddle);
+            vec2 freq_1 = even - mult(odd, twiddle);
 
-            v = vec4(freq.x, freq.y, 0.0, 1.0);
-            v_1 = vec4(freq_alias.x, freq_alias.y, 0.0, 1.0);
+            v = vec4(freq_0.x, freq_0.y, 0.0, 1.0);
+            v_1 = vec4(freq_1.x, freq_1.y, 0.0, 1.0);
 
             real_imag_buffer[e] = vec2(v.x, v.y);
             real_imag_buffer[o] = vec2(v_1.x, v_1.y);
@@ -226,40 +240,28 @@ void fft(){
 }
 
 
-
-
-
 void main(){
 
     ivec2 texC_g = ivec2(gl_GlobalInvocationID.xy);
 
     loadPixs_from_img();
-
     permutate();
     loadPixs_buffer_to_input_b();
     fft();
 
-
     for (int i = 0; i < num_samples_h / gl_WorkGroupSize.x; i++){
 
         vec2 v = vec2(input_b[texC_g.x + gl_WorkGroupSize.x * i].x, input_b[texC_g.x + gl_WorkGroupSize.x * i].y);
-
         vec4 v_out = vec4(v.x, v.y, 0.0, 1.0);
-
+    
         if(norm == (255.0 * 255.0)){
 
-          v_out = vec4(v.x/norm, v.x/norm, v.x/norm, 1.0);
+          v_out = vec4(v.x/norm, v.x/norm, v.x/norm, 0.0);
 
         }
 
-        imageStore(fft_data, ivec2(texC_g.x + gl_WorkGroupSize.x * i, texC_g.y), v_out);
-
-        
+        imageStore(fft_data, ivec2(texC_g.x + gl_WorkGroupSize.x * i, texC_g.y), v_out);        
 
     }
-
-
-
-
 
 }
