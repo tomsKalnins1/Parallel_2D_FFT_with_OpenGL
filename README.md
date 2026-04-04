@@ -2,11 +2,11 @@
 
 <img src="visualized_2d_frequecies/program_window.png" align="left" width="280" style="margin-right: 10px;"/>
 
-This is a naive implementation of the parallel 2D fft.
-Input image height and width must be power of 2. When running the program a window pops up as in the image on the left. <br>
-TOP LEFT : animated assembley of the image from individual frequencies. <br>
+This is a not optimized implementation of a parallel 2D fft with compute shaders.
+Input image height and width must be powers of 2.<br> When running the program a window pops up as shown in the image on the left. <br>
+TOP LEFT : animated assembly of the image from individual frequencies. <br>
 TOP RIGHT  : the output of IFFT <br>
-BOTTOM LEFT : <ins>visualizaton</ins> individual 2D frequencies  <br>
+BOTTOM LEFT : <ins>visualization</ins> individual 2D frequencies  <br>
 BOTTOM RIGHT : the output of fft as texture which contains the real part in the red channel and imaginary part in the green channel  <br>
 
 
@@ -15,18 +15,17 @@ BOTTOM RIGHT : the output of fft as texture which contains the real part in the 
 <img src="visualized_2d_frequecies/image_fft_ifft_image.png" style="float: left; margin-right: 15px; margin-bottom: 10px; margin-top: 100px;" />
 
 
-Above one the left is the original input image, in the middle is an image I used to store the complex outputs of the FFT to later use for the IFFT.
-However the FFT output can also be interpreted in terms of amplitude and phase and those values stored in a texture or image as below (phase is image in the middle, amplitude is the rightmost image).
+Above on the left is the original input image, in the middle is an image I used to store the complex outputs of the FFT to later use for the IFFT.
+However the FFT output can also be interpreted in terms of amplitude and phase and those values can be stored in a texture or image as shown below (phase is image in the middle, amplitude is the rightmost image).
 
 
 <img src="visualized_2d_frequecies/FFT_2D_IMG_TO_MAGNITUDE_PHASE.png" style="float: left; margin-right: 15px;">
 
 <h2 style="clear: both">Reading the input image</h2>
 
- At this point the program takes in black and white RGBA image as a texture.
- The GLSL language does not support recurstion so the option to do the regular Cooley-Tookey FFT is definitely off the table.
- In the original algorithm the levels of recurstion rearranged the elements in such a way that at each superstep the smaller FFTs had evenly spaced samples while mainting the odd and even index based separation.
- This can also be accomplished by taking each element and bit-reversing its index and placing it at the position of the input array which is indicated by the new bit reversed index. This way the iterative version of the    algorithm can be implemented for parallelism.
+ At this point the program takes in a black and white RGBA image as a texture.
+ The GLSL language does not support recursion so the option to do the regular Cooley-Tukey FFT is off the table.
+ The recursion of the original algorithm separates odd index samples from even ones in such a way that the samples at each stage are evenly spaced which is crucial. The necessary grouping of elements can be achieved by bit-reversing the indices. This way the iterative version of the algorithm can be implemented for parallelism.
 
 ```glsl
       uint rev(uint n, uint num_bits){
@@ -52,14 +51,14 @@ After the rev(uint, uint) is used to reorder the elements of the input row the f
 
 ## Parallel execution
 
-If, for example, the number of threads : X_INVOCATIONS = 128 for a 256 image then each thread is responsible for 2 elements or 1 butterfly.
+If, for example, the number of threads : ( X_INVOCATIONS = 128 ) for a 256 image then each thread is responsible for 2 elements or 1 butterfly.
 
 ```glsl
 layout(local_size_x = X_INVOCATIONS, local_size_y = 1, local_size_z = 1) in;
 ```
-However if X_INVOCATIONS < 256/2 then one thread is responsible for more than one butterfly. Because the maximum amount of butterfies is num_samples / 2 then depending on the number of threads per workgroup
+However, if X_INVOCATIONS < 256/2, then one thread is responsible for more than one butterfly. Because the maximum amount of butterflies is num_samples / 2 then depending on the number of threads per workgroup
 num_butterflies_per_thread = ( num_samples / 2 ) / total_num_threads_per_work_group
-The num_lvls is also the amount of supersteps, at each superstep the number of samples for a given sub-FFT 2x larger then the last (here it is k which starts at 2 as the smallest smaple size of an FFT).
+The num_lvls is also the amount of supersteps, at each superstep the number of samples for a given sub-FFT 2x larger then the last (here it is k which starts at 2 as the smallest sample size of an FFT).
 
 ```glsl
 
@@ -73,7 +72,7 @@ void fft(){
     ...
 ```
 
-As the the FFT advances trough the supersteps each thread processes its butterflies iteratively. 
+As the the FFT advances through the supersteps each thread processes its butterflies iteratively. 
 
 ```glsl
 ...
@@ -88,7 +87,7 @@ As the the FFT advances trough the supersteps each thread processes its butterfl
 
 ## Correction of the phase by the twiddle factor
 
-What makes the FFT so efficient is the reuse of lower frequency outputs from sub-FFTs to compute the higer ones. FFT first devides the smaple set into smaller subsets and performs the FFT algorithm on them as if they were independant sets. The problem with treating sample subsets as independant is that this creates as phase shift which has to be corrected, curtesy of the twiddle factors.
+What makes the FFT so efficient is the reuse of lower frequency outputs from sub-FFTs to compute the higher ones. FFT first divides the sample set into smaller and smaller subsets and performs the FFT algorithm on them as if they were independent sets which causes mismatch in phase when these results are joined. The phase is corrected by the twiddle factor. 
 
 ```glsl
 ...
@@ -106,8 +105,8 @@ vec2 odd = input_b[o];
 ...
 ```
 
-The same twiddle factor can negated and reused when computing a frequency that is larger than k/2. Each butterfly computes a frequency thas is less than k/2 and then another one that is by k/2 larger.
-The FFT computes the values, stores them in a shared array. Then synchronization happens in order to make sure than none of the threads advance to the next superstep before all of them are finished.
+Each butterfly has two outputs one is a lower frequency and other is shifted by k/2. The twiddle factors can be reused, by negating the one used on and even numbered block (the low frequency component) and using it on the shifted frequency. The FFT computes the values, stores them in a shared array. Functions memoryBarrierShared() and barrier() are used to prevent threads that finish their work early from proceeding to the next superstep, 
+which would cause garbage output.
 
 ```glsl
             vec2 freq_0 = even + mult(odd, twiddle);
@@ -135,36 +134,33 @@ After the first 2D FFT stage on the image is performed the output is transposed 
 The full compute shader is [fft_compute_horizontal.cs](https://github.com/tomsKalnins1/parallel-FFT_2D-with-OpenGl/blob/main/fft_compute_horizontal.cs) .
 
 
-## Wrong stride
-
+## Wrong (byte) stride
 <img src="Unsuccessful_transforms/wrong_stride.png" align="left" style="margin-right: 10px;"/>
-<br><br><br><br><br><br>
+ 
+This distortion is caused by incorrect byte stride when reading the values for the nonparallel version of this. For example if the image is RGBA then there is a byte for each of these components in a 1D array
+then having the stride of 3 bytes will just create a very distorted image.
 
-This is due to the wrong stride when I was writing the nonparallel version of this. Initially I was sure this was due to me having not understood the algorithm so I spent about 3 days trying to solve this, did not
-occur to me that it could be something else. But turned out if was due to me reading the pixel values form the image with the incorrect stride.
-
-<br><br><br><br><br><br>
-<br><br><br><br><br><br>
 ## Gamma correction issues
 <img src="/Unsuccessful_transforms/gamma_correction_in_stbi_loadf.png" align="left" width="280" style="margin-right: 10px;"/>
 Here the image is darker than it should be. This one also took me a few days.
 The library I was using to load images has a function that also additionally performs gamma correction on the image, so I had to reverse that.
 
-<br><br><br><br><br><br>
-<br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br>
 
-## Rounding problem
-<img src="Unsuccessful_transforms/Rounding_error_in_fragment_shader.png" align="left" width="280" style="margin-right: 10px;"/>
-This was caused by a rouding error in the fragment shader when I was still trying the non-parallel version of this, while converting the texture coorginates from 0-1 to the range from 0 - N (N = num. samples per row or
-column) to use in the IFFT.
-
-<br><br><br><br><br><br>
-<br><br><br><br><br><br>
 
 ## Omission of specific parts of the FFT
-<img src="Test_images/OMIT_IMAG_TEST.png" align="left" width="280" style="margin-right: 10px;"/>
-LEFT : This is how the IFFT output looks when the imaginary parts of the FFT are omitted. My handwavy understanding is that due to removal of imaginary part the FFT becomes just like the real signal it took as input and because the Fourier Transform has complex numbers that each have a conjugate, when multuplying two conjugates by the same real number they still remain conjugates because the conjugate of a real number is that same real number.
-RIGHT : The output of IFFT when you omit the imaginary part of the FFT output when reconstructing the image
+<img src="Unsuccessful_transforms/omit_real_omit_imag.png" align="left" style="margin-right: 10px;"/>
+LEFT : IFFT after the omission of imaginary parts of the FFT output, there is unnecessary symmetry caused in fact for the same reason that FFT output is symmetric when it processes a real valued signal.
+When complex exponential and its conjugate are multiplied by the same real value they still remain conjugates of each other.<br>
+<br>
+RIGHT : IFFT after omitting the real value parts. The reason for the <ins>odd</ins> look of this image is not fully clear to me yet.
 
+## Dependencies
+* [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h)
+* [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h)
+* [GLAD](https://glad.dav1d.de/)
+* [GLFW](https://www.glfw.org/)
+* [glm](https://github.com/g-truc/glm)
+ 
 
 
