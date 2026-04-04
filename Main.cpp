@@ -568,7 +568,7 @@ int main() {
 
 		if (save) {
 
-			//saveImg("C:\\Users\\Toms\\Desktop\\OpenGL\\FourierTransform\\FFT_OUTPUT_DATA_POWER_SPECTRUM.png");
+			//saveImg("FourierTransform\\Whatever_is_on_the_screen.png");
 	
 		}
 		
