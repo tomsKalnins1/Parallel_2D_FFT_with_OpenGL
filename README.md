@@ -127,7 +127,7 @@ The FFT computes the values, stores them in a shared array. Then synchronization
         }
 
         k *= 2;
-
+        synchronize();
   }
 ```
 
@@ -135,6 +135,36 @@ After the first 2D FFT stage on the image is performed the output is transposed 
 The full compute shader is [fft_compute_horizontal.cs](https://github.com/tomsKalnins1/parallel-FFT_2D-with-OpenGl/blob/main/fft_compute_horizontal.cs) .
 
 
-## The bugs I encountered
+## Wrong stride
+
+<img src="Unsuccessful_transforms/wrong_stride.png" align="left" style="margin-right: 10px;"/>
+<br><br><br><br><br><br>
+
+This is due to the wrong stride when I was writing the nonparallel version of this. Initially I was sure this was due to me having not understood the algorithm so I spent about 3 days trying to solve this, did not
+occur to me that it could be something else. But turned out if was due to me reading the pixel values form the image with the incorrect stride.
+
+<br><br><br><br><br><br>
+<br><br><br><br><br><br>
+## Gamma correction issues
+<img src="/Unsuccessful_transforms/gamma_correction_in_stbi_loadf.png" align="left" width="280" style="margin-right: 10px;"/>
+Here the image is darker than it should be. This one also took me a few days.
+The library I was using to load images has a function that also additionally performs gamma correction on the image, so I had to reverse that.
+
+<br><br><br><br><br><br>
+<br><br><br><br><br><br>
+
+## Rounding problem
+<img src="Unsuccessful_transforms/Rounding_error_in_fragment_shader.png" align="left" width="280" style="margin-right: 10px;"/>
+This was caused by a rouding error in the fragment shader when I was still trying the non-parallel version of this, while converting the texture coorginates from 0-1 to the range from 0 - N (N = num. samples per row or
+column) to use in the IFFT.
+
+<br><br><br><br><br><br>
+<br><br><br><br><br><br>
+
+## Omission of specific parts of the FFT
+<img src="Test_images/OMIT_IMAG_TEST.png" align="left" width="280" style="margin-right: 10px;"/>
+LEFT : This is how the IFFT output looks when the imaginary parts of the FFT are omitted. My handwavy understanding is that due to removal of imaginary part the FFT becomes just like the real signal it took as input and because the Fourier Transform has complex numbers that each have a conjugate, when multuplying two conjugates by the same real number they still remain conjugates because the conjugate of a real number is that same real number.
+RIGHT : The output of IFFT when you omit the imaginary part of the FFT output when reconstructing the image
+
 
 

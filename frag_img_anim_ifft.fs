@@ -33,7 +33,7 @@ void main(){
 		for(int y  = 0; y < wave_lim_1; y++){
 
 		vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
-		ivec2 coors = ivec2(tex_coor * (N - 1));	
+		ivec2 coors = ivec2(tex_coor * (N));	
 		float angle  = 2.0 * M_PI * (x * coors.x / N + y * coors.y /N);
 		waveSum += freq.x * cos(angle) - freq.y * sin(angle);
 
@@ -49,7 +49,7 @@ void main(){
 		for(int y  = 0; y < wave_lim_1; y++){
 
 			vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
-			ivec2 coors = ivec2(tex_coor * (N - 1.0));
+			ivec2 coors = ivec2(tex_coor * (N));
 			float angle  = 2.0 * M_PI * (x * coors.x / N + y * coors.y /N);
 			waveSum += freq.x * cos(angle) - freq.y * sin(angle);
 
@@ -62,7 +62,7 @@ void main(){
 		for(int y  = N_i/2 ; y < N_i/2 + wave_lim_1; y++){
 
 			vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
-			ivec2 coors = ivec2(tex_coor * (N - 1.0));
+			ivec2 coors = ivec2(tex_coor * (N));
 			float angle  = 2.0 * M_PI * (x * coors.x / N + y * coors.y / N);
 			waveSum += freq.x * cos(angle) - freq.y * sin(angle);
 	
@@ -75,7 +75,7 @@ void main(){
 		for(int y  = N_i/2 ; y < N_i/2 + wave_lim_1; y++){
 
 			vec4 freq = texelFetch(real_imag, ivec2(x, y), 0);
-			ivec2 coors = ivec2(tex_coor * (N - 1.0));
+			ivec2 coors = ivec2(tex_coor * (N));
 			float angle  = 2.0 * M_PI * (x * coors.x / N + y * coors.y /N);
 			waveSum += freq.x * cos(angle) - freq.y * sin(angle);
 

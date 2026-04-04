@@ -225,7 +225,9 @@ used to be able to mag a thread_id to the right element in the array
 
             real_imag_buffer[e] = vec2(v.x, v.y);
             real_imag_buffer[o] = vec2(v_1.x, v_1.y);
+            
             synchronize();
+
             input_b[o] = real_imag_buffer[o];
             input_b[e] = real_imag_buffer[e];
 
@@ -233,7 +235,7 @@ used to be able to mag a thread_id to the right element in the array
 
         k *= 2;
 
-   //     synchronize();
+    //   synchronize();
 
    }
 
