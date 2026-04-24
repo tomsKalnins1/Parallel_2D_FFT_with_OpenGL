@@ -1,6 +1,5 @@
 #include "VAO.h"
 
-using namespace std;
 
 
 
