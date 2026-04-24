@@ -1,6 +1,5 @@
 #include "VBO.h"
 
-using namespace std;
 
 VBO::VBO(GLfloat* vertices, GLsizeiptr size) {
 	vert = vertices;
